@@ -73,7 +73,7 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
           )}
 
           {/* Content */}
-          <div className="px-5 py-4 max-h-[70vh] overflow-y-auto">{children}</div>
+          <div className="px-6 py-5 max-h-[70vh] overflow-y-auto">{children}</div>
         </div>
       </div>
     </>

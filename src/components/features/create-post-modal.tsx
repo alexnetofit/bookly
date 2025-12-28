@@ -101,7 +101,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Novo Post" className="max-w-lg">
-      <div className="space-y-4">
+      <div className="space-y-5 pb-1">
         {/* Book selector */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Livro relacionado (opcional)</label>
@@ -120,7 +120,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Compartilhe suas impressões sobre um livro, recomendações, ou qualquer pensamento..."
-            className="min-h-[150px]"
+            className="min-h-[180px]"
             maxLength={2000}
           />
           <p className="text-xs text-muted-foreground text-right">
@@ -129,7 +129,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
         </div>
 
         {/* Spoiler toggle */}
-        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg mt-1">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-yellow-500" />
             <span className="text-sm">Contém spoiler?</span>
@@ -156,7 +156,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
         )}
 
         {/* Actions */}
-        <div className="flex gap-3 justify-end pt-2">
+        <div className="flex gap-3 justify-end pt-3">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
