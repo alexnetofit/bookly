@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
+import { BottomNav } from "./bottom-nav";
 import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
@@ -12,7 +13,6 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
   const pathname = usePathname();
 
@@ -36,49 +36,37 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return () => clearTimeout(timeout);
   }, [pathname]);
 
-  // Close mobile menu on route change
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [pathname]);
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden animate-fade-in-fast"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div className={cn("hidden md:block")}>
+      {/* Sidebar - desktop only */}
+      <div className="hidden md:block">
         <Sidebar
           isCollapsed={isCollapsed}
           onToggle={() => setIsCollapsed(!isCollapsed)}
         />
       </div>
 
-      {/* Mobile sidebar */}
-      <div
-        className={cn(
-          "md:hidden fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 ease-out",
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <Sidebar isCollapsed={false} onToggle={() => setIsMobileMenuOpen(false)} />
+      {/* Header - desktop only */}
+      <div className="hidden md:block">
+        <Header
+          onMenuClick={() => {}}
+          isSidebarCollapsed={isCollapsed}
+        />
       </div>
 
-      {/* Header */}
-      <Header
-        onMenuClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        isSidebarCollapsed={isCollapsed}
-      />
+      {/* Mobile header - simplified */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-background/80 backdrop-blur-md border-b flex items-center justify-between px-4">
+        <span className="font-bold text-lg">Bookly</span>
+        <div className="flex items-center gap-2">
+          {/* Can add notifications, theme toggle here if needed */}
+        </div>
+      </header>
 
       {/* Main content */}
       <main
         className={cn(
-          "pt-16 min-h-screen transition-[padding] duration-200 ease-out",
+          "min-h-screen transition-[padding] duration-200 ease-out",
+          "pt-14 pb-20 md:pt-16 md:pb-0", // Mobile: top header + bottom nav padding
           isCollapsed ? "md:pl-16" : "md:pl-64"
         )}
       >
@@ -91,7 +79,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </div>
       </main>
+
+      {/* Bottom navigation - mobile only */}
+      <BottomNav />
     </div>
   );
 }
-

@@ -265,3 +265,8 @@ input, textarea, select, button {
 .spoiler-revealed {
   filter: blur(0);
 }
+
+/* Safe area for iOS devices */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
