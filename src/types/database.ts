@@ -39,6 +39,8 @@ export interface CommunityPost {
   id: string;
   user_id: string;
   book_id: string | null;
+  book_title: string | null;
+  book_author: string | null;
   content: string;
   has_spoiler: boolean;
   likes_count: number;
@@ -46,7 +48,6 @@ export interface CommunityPost {
   created_at: string;
   // Joins
   user_profile?: UserProfile;
-  book?: Book;
 }
 
 export interface PostLike {

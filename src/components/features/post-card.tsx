@@ -7,13 +7,12 @@ import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, Button, Badge, Textarea } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { cn, formatDate } from "@/lib/utils";
-import type { CommunityPost, UserProfile, Book } from "@/types/database";
+import type { CommunityPost, UserProfile } from "@/types/database";
 import { Heart, MessageCircle, AlertTriangle, Eye, User, BookOpen, Trash2, Pencil, Save, X } from "lucide-react";
 
 interface PostCardProps {
   post: CommunityPost & {
     user_profile?: UserProfile;
-    book?: Book;
   };
   onDelete?: () => void;
   onOpenComments?: () => void;
@@ -202,13 +201,15 @@ export function PostCard({ post, onDelete, onOpenComments, onUpdate }: PostCardP
             </div>
           </div>
 
-          {/* Book reference - ALWAYS visible, even with spoiler */}
-          {post.book && (
+          {/* Book reference - ALWAYS visible, even with spoiler, even if book deleted */}
+          {post.book_title && (
             <div className="flex items-center gap-2 mb-3 p-2 bg-muted/50 rounded-lg">
               <BookOpen className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm">
-                <span className="font-medium">{post.book.nome_do_livro}</span>
-                <span className="text-muted-foreground"> por {post.book.autor}</span>
+                <span className="font-medium">{post.book_title}</span>
+                {post.book_author && (
+                  <span className="text-muted-foreground"> por {post.book_author}</span>
+                )}
               </span>
             </div>
           )}
@@ -271,12 +272,14 @@ export function PostCard({ post, onDelete, onOpenComments, onUpdate }: PostCardP
       >
         <div className="space-y-4">
           {/* Book reference (read-only) */}
-          {post.book && (
+          {post.book_title && (
             <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
               <BookOpen className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm">
-                <span className="font-medium">{post.book.nome_do_livro}</span>
-                <span className="text-muted-foreground"> por {post.book.autor}</span>
+                <span className="font-medium">{post.book_title}</span>
+                {post.book_author && (
+                  <span className="text-muted-foreground"> por {post.book_author}</span>
+                )}
               </span>
             </div>
           )}

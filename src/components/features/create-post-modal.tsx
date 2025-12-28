@@ -68,11 +68,16 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Find selected book to get title and author
+      const selectedBook = books.find(b => b.id === selectedBookId);
+
       const { error } = await supabase.from("community_posts").insert({
         user_id: user.id,
         content: content.trim(),
         has_spoiler: hasSpoiler,
         book_id: selectedBookId || null,
+        book_title: selectedBook?.nome_do_livro || null,
+        book_author: selectedBook?.autor || null,
       });
 
       if (error) throw error;

@@ -8,12 +8,11 @@ import { PostCard } from "@/components/features/post-card";
 import { CreatePostModal } from "@/components/features/create-post-modal";
 import { CommentsModal } from "@/components/features/comments-modal";
 import { Button, Skeleton, EmptyState } from "@/components/ui";
-import type { CommunityPost, UserProfile, Book } from "@/types/database";
+import type { CommunityPost, UserProfile } from "@/types/database";
 import { Plus, Users, RefreshCw } from "lucide-react";
 
 interface PostWithRelations extends CommunityPost {
   user_profile?: UserProfile;
-  book?: Book;
 }
 
 export default function ComunidadePage() {
@@ -37,8 +36,7 @@ export default function ComunidadePage() {
         .from("community_posts")
         .select(`
           *,
-          user_profile:users_profile(id, full_name, avatar_url, email),
-          book:books(id, nome_do_livro, autor)
+          user_profile:users_profile(id, full_name, avatar_url, email)
         `)
         .order("created_at", { ascending: false })
         .limit(50);
