@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-
-export const dynamic = "force-dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -18,7 +16,6 @@ export default function CadastroPage() {
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +35,7 @@ export default function CadastroPage() {
     }
 
     try {
+      const supabase = createClient();
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -54,6 +52,7 @@ export default function CadastroPage() {
         } else {
           setError(error.message);
         }
+        setIsLoading(false);
         return;
       }
 
@@ -209,4 +208,3 @@ export default function CadastroPage() {
     </div>
   );
 }
-

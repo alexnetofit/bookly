@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-
-export const dynamic = "force-dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -15,7 +13,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +20,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -34,6 +32,7 @@ export default function LoginPage() {
         } else {
           setError(error.message);
         }
+        setIsLoading(false);
         return;
       }
 
@@ -41,7 +40,6 @@ export default function LoginPage() {
       router.refresh();
     } catch {
       setError("Erro ao fazer login. Tente novamente.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -131,4 +129,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
