@@ -80,10 +80,10 @@ export default function ComunidadePage() {
         </div>
       </div>
 
-      {/* Posts feed */}
+      {/* Posts grid */}
       {isLoading ? (
-        <div className="max-w-2xl space-y-6">
-          {[...Array(3)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
             <Skeleton key={i} className="h-64" />
           ))}
         </div>
@@ -100,7 +100,7 @@ export default function ComunidadePage() {
           }
         />
       ) : (
-        <div className="max-w-2xl space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map((post) => (
             <PostCard
               key={post.id}

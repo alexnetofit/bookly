@@ -45,35 +45,35 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
 
   return (
     <>
-      {/* Overlay escuro */}
+      {/* Overlay */}
       <div 
-        className="fixed inset-0 z-40 bg-black/40"
+        className="fixed inset-0 z-40 bg-black/50"
         onClick={onClose}
       />
       
-      {/* Modal centralizado */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+      {/* Modal - fixed center */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
           className={cn(
-            "pointer-events-auto w-full max-w-md mx-4 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-700",
+            "pointer-events-auto w-full max-w-md bg-card text-card-foreground rounded-xl shadow-2xl border",
             className
           )}
         >
           {/* Header */}
           {title && (
-            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-700">
+            <div className="flex items-center justify-between px-5 py-4 border-b">
               <h2 className="text-lg font-semibold">{title}</h2>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-muted transition-colors"
               >
-                <X className="h-5 w-5 text-zinc-500" />
+                <X className="h-5 w-5 text-muted-foreground" />
               </button>
             </div>
           )}
 
           {/* Content */}
-          <div className="px-6 py-5 max-h-[70vh] overflow-y-auto">{children}</div>
+          <div className="px-5 py-4 max-h-[70vh] overflow-y-auto">{children}</div>
         </div>
       </div>
     </>
