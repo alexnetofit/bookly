@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { BottomNav } from "./bottom-nav";
@@ -54,19 +55,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         />
       </div>
 
-      {/* Mobile header - simplified */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-background/80 backdrop-blur-md border-b flex items-center justify-between px-4">
-        <span className="font-bold text-lg">Bookly</span>
-        <div className="flex items-center gap-2">
-          {/* Can add notifications, theme toggle here if needed */}
-        </div>
+      {/* Mobile header - with logo */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-background/80 backdrop-blur-md border-b flex items-center justify-center px-4">
+        <Image
+          src="/logo.png"
+          alt="Bookly"
+          width={28}
+          height={28}
+          className="mr-2"
+        />
+        <span className="font-bold text-lg bg-gradient-to-r from-[#1e3a5f] to-[#00bcd4] dark:from-[#4dd0e1] dark:to-[#00bcd4] bg-clip-text text-transparent">
+          Bookly
+        </span>
       </header>
 
       {/* Main content */}
       <main
         className={cn(
           "min-h-screen transition-[padding] duration-200 ease-out",
-          "pt-14 pb-20 md:pt-16 md:pb-0", // Mobile: top header + bottom nav padding
+          "pt-14 pb-20 md:pt-16 md:pb-0",
           isCollapsed ? "md:pl-16" : "md:pl-64"
         )}
       >

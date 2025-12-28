@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -8,7 +9,6 @@ import {
   Library,
   Users,
   Target,
-  BookOpen,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -60,11 +60,15 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           prefetch={true}
         >
-          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
-            <BookOpen className="w-4 h-4 text-primary" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Bookly"
+            width={32}
+            height={32}
+            className="shrink-0"
+          />
           <span className={cn(
-            "font-bold text-lg transition-opacity duration-200",
+            "font-bold text-lg bg-gradient-to-r from-[#1e3a5f] to-[#00bcd4] dark:from-[#4dd0e1] dark:to-[#00bcd4] bg-clip-text text-transparent transition-opacity duration-200",
             isCollapsed ? "opacity-0 w-0" : "opacity-100"
           )}>
             Bookly

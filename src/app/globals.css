@@ -1,61 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  /* Colors - Light Mode */
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
+  /* Colors - Light Mode - Based on Bookly Logo */
+  --background: 210 20% 98%;
+  --foreground: 210 50% 15%;
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+  --card-foreground: 210 50% 15%;
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 142.1 76.2% 36.3%;
-  --primary-foreground: 355.7 100% 97.3%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 84.2% 60.2%;
+  --popover-foreground: 210 50% 15%;
+  --primary: 195 85% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 25% 93%;
+  --secondary-foreground: 210 50% 20%;
+  --muted: 210 20% 94%;
+  --muted-foreground: 210 15% 45%;
+  --accent: 16 85% 55%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 142.1 76.2% 36.3%;
+  --border: 210 20% 88%;
+  --input: 210 20% 88%;
+  --ring: 195 85% 45%;
   --radius: 0.625rem;
 
   /* Status Colors */
-  --status-reading: 217 91% 60%;
-  --status-read: 142 76% 36%;
-  --status-not-started: 240 5% 65%;
-  --status-abandoned: 0 84% 60%;
+  --status-reading: 195 85% 50%;
+  --status-read: 160 70% 40%;
+  --status-not-started: 210 15% 55%;
+  --status-abandoned: 0 70% 55%;
 }
 
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 142.1 70.6% 45.3%;
-  --primary-foreground: 144.9 80.4% 10%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
+  /* Dark Mode - Based on Bookly Logo */
+  --background: 210 35% 8%;
+  --foreground: 210 20% 95%;
+  --card: 210 30% 12%;
+  --card-foreground: 210 20% 95%;
+  --popover: 210 30% 12%;
+  --popover-foreground: 210 20% 95%;
+  --primary: 195 80% 50%;
+  --primary-foreground: 210 50% 10%;
+  --secondary: 210 25% 18%;
+  --secondary-foreground: 210 20% 90%;
+  --muted: 210 25% 18%;
+  --muted-foreground: 210 15% 60%;
+  --accent: 16 80% 55%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 65% 45%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 142.4 71.8% 29.2%;
+  --border: 210 25% 20%;
+  --input: 210 25% 20%;
+  --ring: 195 80% 50%;
 
   /* Status Colors - Dark Mode */
-  --status-reading: 217 91% 65%;
-  --status-read: 142 70% 45%;
-  --status-not-started: 240 5% 55%;
-  --status-abandoned: 0 62% 50%;
+  --status-reading: 195 80% 55%;
+  --status-read: 160 65% 45%;
+  --status-not-started: 210 15% 50%;
+  --status-abandoned: 0 60% 50%;
 }
 
 @theme inline {
