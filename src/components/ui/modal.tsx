@@ -44,36 +44,38 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop simples */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-200"
+        className="fixed inset-0 bg-black/50"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div
-        className={cn(
-          "relative z-10 w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl bg-card border shadow-2xl",
-          "animate-scale-in",
-          className
-        )}
-      >
-        {/* Header */}
-        {title && (
-          <div className="flex items-center justify-between border-b bg-muted/30 px-6 py-4">
-            <h2 className="text-lg font-semibold">{title}</h2>
-            <button
-              onClick={onClose}
-              className="rounded-full p-2 hover:bg-accent transition-colors -mr-2"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        )}
+      {/* Container centralizado */}
+      <div className="flex min-h-full items-center justify-center p-4">
+        {/* Modal */}
+        <div
+          className={cn(
+            "relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-lg shadow-lg",
+            className
+          )}
+        >
+          {/* Header */}
+          {title && (
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h2>
+              <button
+                onClick={onClose}
+                className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <X className="h-5 w-5 text-zinc-500" />
+              </button>
+            </div>
+          )}
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(85vh-80px)]">{children}</div>
+          {/* Content */}
+          <div className="px-5 py-4">{children}</div>
+        </div>
       </div>
     </div>
   );
