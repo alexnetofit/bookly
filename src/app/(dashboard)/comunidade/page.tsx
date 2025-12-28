@@ -108,6 +108,7 @@ export default function ComunidadePage() {
               key={post.id}
               post={post}
               onDelete={() => fetchPosts()}
+              onUpdate={() => fetchPosts()}
               onOpenComments={() => setSelectedPostId(post.id)}
             />
           ))}
