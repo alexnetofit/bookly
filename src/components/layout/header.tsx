@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useUser } from "@/hooks/useUser";
-import { Button } from "@/components/ui";
+import { Button, Skeleton } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import {
   Sun,
@@ -23,7 +23,7 @@ interface HeaderProps {
 
 export function Header({ onMenuClick, isSidebarCollapsed }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
-  const { profile } = useUser();
+  const { profile, isLoading } = useUser();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -102,13 +102,22 @@ export function Header({ onMenuClick, isSidebarCollapsed }: HeaderProps) {
                 <User className="w-4 h-4 text-primary" />
               )}
             </div>
-            <div className="hidden md:block text-left">
-              <p className="text-sm font-medium line-clamp-1">
-                {profile?.full_name || "Usuário"}
-              </p>
-              <p className="text-xs text-muted-foreground line-clamp-1">
-                {profile?.email}
-              </p>
+            <div className="hidden md:block text-left min-w-[100px]">
+              {isLoading ? (
+                <>
+                  <Skeleton className="h-4 w-24 mb-1" />
+                  <Skeleton className="h-3 w-32" />
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-medium line-clamp-1">
+                    {profile?.full_name || "Usuário"}
+                  </p>
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {profile?.email}
+                  </p>
+                </>
+              )}
             </div>
           </button>
 
@@ -149,4 +158,3 @@ export function Header({ onMenuClick, isSidebarCollapsed }: HeaderProps) {
     </header>
   );
 }
-
