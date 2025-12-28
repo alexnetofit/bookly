@@ -27,20 +27,37 @@ export function useUser(): UseUserReturn {
       .eq("id", userId)
       .single();
     
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/951d7bfd-a350-405b-b678-3eded31d3efc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useUser.ts:fetchProfile',message:'Profile fetched',data:{userId,hasProfile:!!profileData,profileEmail:profileData?.email},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
+    // #endregion
+    
     setProfile(profileData);
   };
 
   const fetchUser = async () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/951d7bfd-a350-405b-b678-3eded31d3efc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useUser.ts:fetchUser:start',message:'fetchUser started',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
+    
     try {
       // First try to get session from local storage (faster)
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/951d7bfd-a350-405b-b678-3eded31d3efc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useUser.ts:getSession',message:'getSession result',data:{hasSession:!!session,hasUser:!!session?.user,userId:session?.user?.id,sessionError:sessionError?.message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
+      // #endregion
       
       if (session?.user) {
         setUser(session.user);
         await fetchProfile(session.user.id);
       } else {
         // Fallback to server verification
-        const { data: { user: serverUser } } = await supabase.auth.getUser();
+        const { data: { user: serverUser }, error: userError } = await supabase.auth.getUser();
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/951d7bfd-a350-405b-b678-3eded31d3efc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useUser.ts:getUser',message:'getUser fallback result',data:{hasServerUser:!!serverUser,userId:serverUser?.id,userError:userError?.message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+        // #endregion
+        
         setUser(serverUser);
         
         if (serverUser) {
@@ -50,6 +67,10 @@ export function useUser(): UseUserReturn {
         }
       }
     } catch (error) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/951d7bfd-a350-405b-b678-3eded31d3efc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useUser.ts:catch',message:'Error in fetchUser',data:{error:String(error)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+      // #endregion
+      
       console.error("Error fetching user:", error);
       setUser(null);
       setProfile(null);
@@ -63,6 +84,10 @@ export function useUser(): UseUserReturn {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/951d7bfd-a350-405b-b678-3eded31d3efc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useUser.ts:onAuthStateChange',message:'Auth state changed',data:{event,hasSession:!!session,userId:session?.user?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
+        // #endregion
+        
         if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
           if (session?.user) {
             setUser(session.user);
