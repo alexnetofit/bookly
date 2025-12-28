@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { UserProfile } from "@/types/database";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 interface UseUserReturn {
@@ -20,34 +20,38 @@ export function useUser(): UseUserReturn {
 
   const supabase = createClient();
 
-  const fetchProfile = async (userId: string) => {
-    const { data: profileData } = await supabase
-      .from("users_profile")
-      .select("*")
-      .eq("id", userId)
-      .single();
-    
-    setProfile(profileData);
-  };
-
-  const fetchUser = async () => {
+  const fetchProfile = useCallback(async (userId: string) => {
     try {
-      // First try to get session from local storage (faster)
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: profileData } = await supabase
+        .from("users_profile")
+        .select("*")
+        .eq("id", userId)
+        .single();
       
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
+      setProfile(profileData);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  }, [supabase]);
+
+  const fetchUser = useCallback(async () => {
+    try {
+      // Use getUser() - more reliable, validates token with server
+      const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error("Auth error:", error.message);
+        setUser(null);
+        setProfile(null);
+        return;
+      }
+
+      if (currentUser) {
+        setUser(currentUser);
+        await fetchProfile(currentUser.id);
       } else {
-        // Fallback to server verification
-        const { data: { user: serverUser } } = await supabase.auth.getUser();
-        setUser(serverUser);
-        
-        if (serverUser) {
-          await fetchProfile(serverUser.id);
-        } else {
-          setProfile(null);
-        }
+        setUser(null);
+        setProfile(null);
       }
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -56,14 +60,20 @@ export function useUser(): UseUserReturn {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [supabase, fetchProfile]);
 
   useEffect(() => {
+    // Only run on client
+    if (typeof window === "undefined") {
+      setIsLoading(false);
+      return;
+    }
+
     fetchUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
           if (session?.user) {
             setUser(session.user);
             await fetchProfile(session.user.id);
@@ -79,7 +89,7 @@ export function useUser(): UseUserReturn {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUser, fetchProfile, supabase.auth]);
 
   const isSubscriptionActive = profile
     ? profile.is_admin ||
