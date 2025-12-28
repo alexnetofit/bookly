@@ -26,7 +26,7 @@ interface AuthorRanking {
 }
 
 export default function DashboardPage() {
-  const { profile } = useUser();
+  const { user, profile } = useUser();
   const [stats, setStats] = useState<BookStats | null>(null);
   const [goal, setGoal] = useState<AnnualGoal | null>(null);
   const [topAuthors, setTopAuthors] = useState<AuthorRanking[]>([]);
@@ -36,16 +36,21 @@ export default function DashboardPage() {
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
 
   const fetchDashboardData = async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
-      // Fetch all books
+      // Fetch user's books only
       const { data: booksData } = await supabase
         .from("books")
-        .select("*");
+        .select("*")
+        .eq("user_id", user.id);
 
       const books = (booksData || []) as BookType[];
 

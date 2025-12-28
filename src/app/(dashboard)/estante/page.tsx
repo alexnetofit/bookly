@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useDebounce } from "@/hooks";
+import { useUser } from "@/hooks/useUser";
 import { BookCard } from "@/components/features/book-card";
 import { Button, Input, Select, Skeleton, EmptyState } from "@/components/ui";
 import type { Book, ReadingStatus } from "@/types/database";
@@ -38,6 +39,7 @@ const sortOptions = [
 ];
 
 export default function EstantePage() {
+  const { user } = useUser();
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -52,9 +54,12 @@ export default function EstantePage() {
   const supabase = createClient();
 
   const fetchBooks = useCallback(async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
-      let query = supabase.from("books").select("*");
+      // Filtrar explicitamente pelo usuário logado
+      let query = supabase.from("books").select("*").eq("user_id", user.id);
 
       // Apply search filter
       if (debouncedSearch) {
@@ -88,11 +93,13 @@ export default function EstantePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedSearch, statusFilter, ratingFilter, sortBy]);
+  }, [user, debouncedSearch, statusFilter, ratingFilter, sortBy]);
 
   useEffect(() => {
-    fetchBooks();
-  }, [fetchBooks]);
+    if (user) {
+      fetchBooks();
+    }
+  }, [fetchBooks, user]);
 
   const activeFiltersCount = [statusFilter, ratingFilter].filter(Boolean).length;
 

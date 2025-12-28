@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/hooks/useUser";
 import { useToast } from "@/components/ui/toast";
 import {
   Card,
@@ -20,6 +21,7 @@ import type { AnnualGoal } from "@/types/database";
 import { Target, Trophy, TrendingUp, Edit2, Check, X, BookOpen } from "lucide-react";
 
 export default function MetasPage() {
+  const { user } = useUser();
   const [goal, setGoal] = useState<AnnualGoal | null>(null);
   const [booksReadThisYear, setBooksReadThisYear] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,10 +34,14 @@ export default function MetasPage() {
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   const fetchData = async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
       // Fetch current year goal
@@ -50,11 +56,12 @@ export default function MetasPage() {
         setNewGoalAmount(goalData.goal_amount.toString());
       }
 
-      // Fetch books read this year
+      // Fetch user's books read this year
       const startOfYear = new Date(currentYear, 0, 1).toISOString();
       const { data: books, count } = await supabase
         .from("books")
         .select("id", { count: "exact" })
+        .eq("user_id", user.id)
         .eq("status_leitura", "lido")
         .gte("updated_at", startOfYear);
 
