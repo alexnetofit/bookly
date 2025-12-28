@@ -44,18 +44,20 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
   if (!isOpen) return null;
 
   return (
-    <>
+    <div className="fixed inset-0 z-50">
       {/* Overlay */}
       <div 
-        className="fixed inset-0 z-40 bg-black/50"
+        className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
       
-      {/* Modal - fixed center */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      {/* Modal - always centered in viewport */}
+      <div 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4"
+      >
         <div
           className={cn(
-            "pointer-events-auto w-full max-w-md bg-card text-card-foreground rounded-xl shadow-2xl border",
+            "w-full bg-card text-card-foreground rounded-xl shadow-2xl border",
             className
           )}
         >
@@ -76,7 +78,7 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
           <div className="px-5 py-4 max-h-[70vh] overflow-y-auto">{children}</div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
