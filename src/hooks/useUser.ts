@@ -20,24 +20,39 @@ export function useUser(): UseUserReturn {
 
   const supabase = createClient();
 
+  const fetchProfile = async (userId: string) => {
+    const { data: profileData } = await supabase
+      .from("users_profile")
+      .select("*")
+      .eq("id", userId)
+      .single();
+    
+    setProfile(profileData);
+  };
+
   const fetchUser = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from("users_profile")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        
-        setProfile(profile);
+      // First try to get session from local storage (faster)
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        setUser(session.user);
+        await fetchProfile(session.user.id);
       } else {
-        setProfile(null);
+        // Fallback to server verification
+        const { data: { user: serverUser } } = await supabase.auth.getUser();
+        setUser(serverUser);
+        
+        if (serverUser) {
+          await fetchProfile(serverUser.id);
+        } else {
+          setProfile(null);
+        }
       }
     } catch (error) {
       console.error("Error fetching user:", error);
+      setUser(null);
+      setProfile(null);
     } finally {
       setIsLoading(false);
     }
@@ -48,14 +63,11 @@ export function useUser(): UseUserReturn {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
-        if (event === "SIGNED_IN" && session?.user) {
-          setUser(session.user);
-          const { data: profile } = await supabase
-            .from("users_profile")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-          setProfile(profile);
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          if (session?.user) {
+            setUser(session.user);
+            await fetchProfile(session.user.id);
+          }
         } else if (event === "SIGNED_OUT") {
           setUser(null);
           setProfile(null);
@@ -84,4 +96,3 @@ export function useUser(): UseUserReturn {
     refetch: fetchUser,
   };
 }
-

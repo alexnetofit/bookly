@@ -1,6 +1,6 @@
-"use client";
-
 import { createBrowserClient } from "@supabase/ssr";
+
+let client: ReturnType<typeof createBrowserClient> | null = null;
 
 export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,6 +11,7 @@ export function createClient() {
     return {
       auth: {
         getUser: async () => ({ data: { user: null }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
         signInWithPassword: async () => ({ error: { message: "Not configured" } }),
         signUp: async () => ({ error: { message: "Not configured" } }),
         signOut: async () => ({}),
@@ -46,6 +47,11 @@ export function createClient() {
     } as ReturnType<typeof createBrowserClient>;
   }
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
-}
+  // Singleton pattern - reuse the same client instance
+  if (client) {
+    return client;
+  }
 
+  client = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  return client;
+}
