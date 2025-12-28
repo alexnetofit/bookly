@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { UserProfile } from "@/types/database";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 
 interface UseUserReturn {
@@ -13,87 +13,57 @@ interface UseUserReturn {
   refetch: () => Promise<void>;
 }
 
+// Get singleton client
+const supabase = createClient();
+
 export function useUser(): UseUserReturn {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Create client once and reuse
-  const supabase = useMemo(() => createClient(), []);
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from("users_profile")
+      .select("*")
+      .eq("id", userId)
+      .single();
+    setProfile(data);
+  };
+
+  const refetch = async () => {
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (currentUser) {
+      setUser(currentUser);
+      await fetchProfile(currentUser.id);
+    }
+  };
 
   useEffect(() => {
     // Get initial session
-    const getInitialSession = async () => {
-      try {
-        // First, try getSession for quick local read
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          setUser(session.user);
-          
-          // Fetch profile
-          const { data: profileData } = await supabase
-            .from("users_profile")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-          
-          setProfile(profileData);
-        }
-      } catch (error) {
-        console.error("Error getting initial session:", error);
-      } finally {
-        setIsLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        fetchProfile(session.user.id);
       }
-    };
+      setIsLoading(false);
+    });
 
-    getInitialSession();
-
-    // Listen for auth state changes
+    // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (session?.user) {
           setUser(session.user);
-          
-          // Fetch profile on sign in or token refresh
-          if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
-            const { data: profileData } = await supabase
-              .from("users_profile")
-              .select("*")
-              .eq("id", session.user.id)
-              .single();
-            
-            setProfile(profileData);
-          }
-        } else if (event === "SIGNED_OUT") {
+          fetchProfile(session.user.id);
+        } else {
           setUser(null);
           setProfile(null);
         }
-        
         setIsLoading(false);
       }
     );
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  const refetch = async () => {
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    
-    if (currentUser) {
-      setUser(currentUser);
-      
-      const { data: profileData } = await supabase
-        .from("users_profile")
-        .select("*")
-        .eq("id", currentUser.id)
-        .single();
-      
-      setProfile(profileData);
-    }
-  };
+    return () => subscription.unsubscribe();
+  }, []);
 
   const isSubscriptionActive = profile
     ? profile.is_admin ||
@@ -102,11 +72,5 @@ export function useUser(): UseUserReturn {
         : false)
     : false;
 
-  return {
-    user,
-    profile,
-    isLoading,
-    isSubscriptionActive,
-    refetch,
-  };
+  return { user, profile, isLoading, isSubscriptionActive, refetch };
 }
