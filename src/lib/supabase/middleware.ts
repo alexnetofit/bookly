@@ -34,9 +34,11 @@ export async function updateSession(request: NextRequest) {
       },
     });
 
+    // Use getSession to leverage Supabase cookies without an extra fetch
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
+    const user = session?.user || null;
 
     // Define public routes that don't require authentication
     const publicRoutes = ["/", "/login", "/cadastro", "/auth/callback", "/assinatura-expirada"];

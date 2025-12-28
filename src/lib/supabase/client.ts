@@ -1,22 +1,12 @@
 import { createBrowserClient } from "@supabase/ssr";
 
 let client: ReturnType<typeof createBrowserClient> | null = null;
-let clientCreationCount = 0;
 
 export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // #region agent log
-  clientCreationCount++;
-  fetch('http://127.0.0.1:7242/ingest/951d7bfd-a350-405b-b678-3eded31d3efc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.ts:createClient',message:'createClient called',data:{hasUrl:!!supabaseUrl,hasKey:!!supabaseAnonKey,hasExistingClient:!!client,creationCount:clientCreationCount},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
-  // #endregion
-
   if (!supabaseUrl || !supabaseAnonKey) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/951d7bfd-a350-405b-b678-3eded31d3efc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'client.ts:mockClient',message:'Returning mock client - env vars missing',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
-    // #endregion
-    
     // Return a mock client during build time
     return {
       auth: {
