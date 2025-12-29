@@ -329,24 +329,29 @@ function EditSubscriptionModal({
   );
   const [isSaving, setIsSaving] = useState(false);
 
-  const supabase = createClient();
   const { showToast } = useToast();
 
   const handleSave = async () => {
     setIsSaving(true);
 
     try {
-      const { error } = await supabase
-        .from("users_profile")
-        .update({
+      const response = await fetch("/api/admin/subscriptions", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
           plan: plan || null,
           subscription_expires_at: expiresAt
             ? new Date(expiresAt).toISOString()
             : null,
-        })
-        .eq("id", user.id);
+        }),
+      });
 
-      if (error) throw error;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao atualizar");
+      }
 
       showToast("Assinatura atualizada com sucesso!", "success");
       onSuccess();

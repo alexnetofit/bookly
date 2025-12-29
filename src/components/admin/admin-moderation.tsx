@@ -96,12 +96,15 @@ export function AdminModeration() {
     if (!postToDelete) return;
 
     try {
-      const { error } = await supabase
-        .from("community_posts")
-        .delete()
-        .eq("id", postToDelete.id);
+      const response = await fetch(`/api/admin/posts?id=${postToDelete.id}`, {
+        method: "DELETE",
+      });
 
-      if (error) throw error;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao excluir");
+      }
 
       showToast("Post excluído com sucesso!", "success");
       fetchPosts();
