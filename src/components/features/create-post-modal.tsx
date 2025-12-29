@@ -162,60 +162,57 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
         <div className="border-t my-3" />
 
         {/* Options row */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            {/* Book selector */}
-            <div className="relative">
-              <select
-                value={selectedBookId}
-                onChange={(e) => setSelectedBookId(e.target.value)}
-                disabled={isFetchingBooks}
-                className="appearance-none bg-transparent border border-border rounded-full px-3 py-1.5 pr-8 text-sm cursor-pointer hover:bg-muted transition-colors"
-              >
-                <option value="">📚 Adicionar livro</option>
-                {books.map((book) => (
-                  <option key={book.id} value={book.id}>
-                    {book.nome_do_livro}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Book selector */}
+          <select
+            value={selectedBookId}
+            onChange={(e) => setSelectedBookId(e.target.value)}
+            disabled={isFetchingBooks}
+            className="appearance-none bg-transparent border border-border rounded-full px-3 py-1.5 text-sm cursor-pointer hover:bg-muted transition-colors max-w-[160px]"
+          >
+            <option value="">📚 Livro</option>
+            {books.map((book) => (
+              <option key={book.id} value={book.id}>
+                {book.nome_do_livro}
+              </option>
+            ))}
+          </select>
 
-            {/* Spoiler toggle */}
-            <button
-              type="button"
-              onClick={() => setHasSpoiler(!hasSpoiler)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors",
-                hasSpoiler 
-                  ? "bg-amber-500/20 text-amber-600 dark:text-amber-400" 
-                  : "border border-border hover:bg-muted"
-              )}
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              Spoiler
-            </button>
-          </div>
+          {/* Spoiler toggle */}
+          <button
+            type="button"
+            onClick={() => setHasSpoiler(!hasSpoiler)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors",
+              hasSpoiler 
+                ? "bg-amber-500/20 text-amber-600 dark:text-amber-400" 
+                : "border border-border hover:bg-muted"
+            )}
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Spoiler
+          </button>
 
-          <div className="flex items-center gap-3">
-            {/* Character count */}
-            <span className={cn(
-              "text-sm",
-              isNearLimit ? "text-amber-500" : "text-muted-foreground"
-            )}>
-              {remainingChars}
-            </span>
+          {/* Spacer */}
+          <div className="flex-1" />
 
-            {/* Post button */}
-            <Button 
-              onClick={handleSubmit} 
-              isLoading={isLoading}
-              disabled={!content.trim()}
-              className="rounded-full px-5"
-            >
-              Postar
-            </Button>
-          </div>
+          {/* Character count */}
+          <span className={cn(
+            "text-sm",
+            isNearLimit ? "text-amber-500" : "text-muted-foreground"
+          )}>
+            {remainingChars}
+          </span>
+
+          {/* Post button */}
+          <Button 
+            onClick={handleSubmit} 
+            isLoading={isLoading}
+            disabled={!content.trim()}
+            className="rounded-full px-4"
+          >
+            Postar
+          </Button>
         </div>
 
         {/* Spoiler notice */}

@@ -61,7 +61,7 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
       
       {/* Modal - always centered in viewport */}
       <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md"
       >
         <div
           className={cn(
