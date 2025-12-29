@@ -30,10 +30,23 @@ export async function POST(request: Request) {
 
     // Validate webhook secret
     const webhookSecret = request.headers.get("x-webhook-secret");
+    const expectedSecret = process.env.WEBHOOK_SECRET;
     
-    if (webhookSecret !== process.env.WEBHOOK_SECRET) {
+    console.log("Received secret:", webhookSecret);
+    console.log("Expected secret:", expectedSecret);
+    console.log("Match:", webhookSecret === expectedSecret);
+    
+    if (!expectedSecret) {
+      console.error("WEBHOOK_SECRET env variable not set!");
       return NextResponse.json(
-        { error: "Invalid webhook secret" },
+        { error: "Server configuration error: WEBHOOK_SECRET not set" },
+        { status: 500 }
+      );
+    }
+    
+    if (webhookSecret !== expectedSecret) {
+      return NextResponse.json(
+        { error: "Invalid webhook secret", received: webhookSecret?.substring(0, 10) + "..." },
         { status: 401 }
       );
     }
