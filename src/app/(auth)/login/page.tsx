@@ -60,7 +60,7 @@ export default function LoginPage() {
               src="/logo_cinza.png"
               alt="Babel"
               style={{ height: 56, width: 'auto' }}
-              className="brightness-50 dark:brightness-100 dark:invert"
+              className="brightness-0 dark:brightness-100 dark:invert"
             />
           </div>
           <div>
