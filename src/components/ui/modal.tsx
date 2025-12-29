@@ -55,7 +55,7 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
     <div className="fixed inset-0 z-[100]">
       {/* Overlay */}
       <div 
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-foreground/20 backdrop-blur-sm"
         onClick={onClose}
       />
       
@@ -65,19 +65,19 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
       >
         <div
           className={cn(
-            "w-full bg-card text-card-foreground rounded-xl shadow-2xl border",
+            "w-full bg-card text-card-foreground rounded-lg shadow-xl border border-border/60",
             className
           )}
         >
           {/* Header */}
           {title && (
-            <div className="flex items-center justify-between px-5 py-4 border-b">
-              <h2 className="text-lg font-semibold">{title}</h2>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border/60">
+              <h2 className="font-serif text-xl">{title}</h2>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                className="p-1.5 rounded-md hover:bg-muted transition-colors"
               >
-                <X className="h-5 w-5 text-muted-foreground" />
+                <X className="h-4 w-4 text-muted-foreground" />
               </button>
             </div>
           )}

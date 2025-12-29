@@ -12,15 +12,15 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", isLoading, children, disabled, ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97] hover:brightness-105";
+      "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]";
 
     const variants = {
-      default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+      default: "bg-primary text-primary-foreground hover:opacity-90",
       secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-      outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-      ghost: "hover:bg-accent hover:text-accent-foreground",
+      outline: "border border-border bg-transparent hover:bg-muted",
+      ghost: "hover:bg-muted",
       destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-      link: "text-primary underline-offset-4 hover:underline",
+      link: "text-foreground underline-offset-4 hover:underline",
     };
 
     const sizes = {

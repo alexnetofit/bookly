@@ -1,62 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  /* Colors - Light Mode - Based on Bookly Logo */
-  --background: 210 20% 98%;
-  --foreground: 210 50% 15%;
-  --card: 0 0% 100%;
-  --card-foreground: 210 50% 15%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 210 50% 15%;
-  --primary: 195 85% 45%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 210 25% 93%;
-  --secondary-foreground: 210 50% 20%;
-  --muted: 210 20% 94%;
-  --muted-foreground: 210 15% 45%;
-  --accent: 16 85% 55%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
+  /* Colors - Light Mode - Babel: Sofisticado e Minimalista */
+  --background: 30 25% 97%;
+  --foreground: 30 10% 15%;
+  --card: 30 20% 99%;
+  --card-foreground: 30 10% 15%;
+  --popover: 30 20% 99%;
+  --popover-foreground: 30 10% 15%;
+  --primary: 30 10% 20%;
+  --primary-foreground: 30 25% 97%;
+  --secondary: 30 15% 92%;
+  --secondary-foreground: 30 10% 25%;
+  --muted: 30 15% 94%;
+  --muted-foreground: 30 8% 45%;
+  --accent: 35 40% 45%;
+  --accent-foreground: 30 25% 97%;
+  --destructive: 0 65% 50%;
   --destructive-foreground: 0 0% 98%;
-  --border: 210 20% 88%;
-  --input: 210 20% 88%;
-  --ring: 195 85% 45%;
-  --radius: 0.625rem;
+  --border: 30 15% 88%;
+  --input: 30 15% 88%;
+  --ring: 30 10% 20%;
+  --radius: 0.5rem;
 
-  /* Status Colors */
-  --status-reading: 195 85% 50%;
-  --status-read: 160 70% 40%;
-  --status-not-started: 210 15% 55%;
-  --status-abandoned: 0 70% 55%;
+  /* Status Colors - Sofisticado */
+  --status-reading: 35 45% 50%;
+  --status-read: 145 35% 40%;
+  --status-not-started: 30 10% 55%;
+  --status-abandoned: 0 50% 50%;
 }
 
 .dark {
-  /* Dark Mode - Based on Bookly Logo */
-  --background: 210 35% 8%;
-  --foreground: 210 20% 95%;
-  --card: 210 30% 12%;
-  --card-foreground: 210 20% 95%;
-  --popover: 210 30% 12%;
-  --popover-foreground: 210 20% 95%;
-  --primary: 195 80% 50%;
-  --primary-foreground: 210 50% 10%;
-  --secondary: 210 25% 18%;
-  --secondary-foreground: 210 20% 90%;
-  --muted: 210 25% 18%;
-  --muted-foreground: 210 15% 60%;
-  --accent: 16 80% 55%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 65% 45%;
+  /* Dark Mode - Babel: Elegante e Escuro */
+  --background: 30 10% 8%;
+  --foreground: 30 15% 92%;
+  --card: 30 10% 11%;
+  --card-foreground: 30 15% 92%;
+  --popover: 30 10% 11%;
+  --popover-foreground: 30 15% 92%;
+  --primary: 30 20% 85%;
+  --primary-foreground: 30 10% 10%;
+  --secondary: 30 10% 16%;
+  --secondary-foreground: 30 15% 85%;
+  --muted: 30 10% 16%;
+  --muted-foreground: 30 10% 55%;
+  --accent: 35 35% 55%;
+  --accent-foreground: 30 10% 10%;
+  --destructive: 0 55% 45%;
   --destructive-foreground: 0 0% 98%;
-  --border: 210 25% 20%;
-  --input: 210 25% 20%;
-  --ring: 195 80% 50%;
+  --border: 30 10% 18%;
+  --input: 30 10% 18%;
+  --ring: 30 20% 85%;
 
   /* Status Colors - Dark Mode */
-  --status-reading: 195 80% 55%;
-  --status-read: 160 65% 45%;
-  --status-not-started: 210 15% 50%;
-  --status-abandoned: 0 60% 50%;
+  --status-reading: 35 40% 55%;
+  --status-read: 145 30% 45%;
+  --status-not-started: 30 10% 50%;
+  --status-abandoned: 0 45% 50%;
 }
 
 @theme inline {
@@ -83,6 +83,7 @@
   
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-playfair);
 }
 
 * {
@@ -95,24 +96,28 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* Serif font for titles */
+.font-serif {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 4px;
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+  background: hsl(var(--muted-foreground) / 0.35);
 }
 
 /* Smooth transitions for everything */
@@ -244,7 +249,7 @@ input, textarea, select, button {
 
 .hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -5px rgba(0, 0, 0, 0.03);
 }
 
 /* Click effect */

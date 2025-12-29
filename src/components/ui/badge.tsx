@@ -7,13 +7,13 @@ export interface BadgeProps extends HTMLAttributes<HTMLDivElement> {
 
 function Badge({ className, variant = "default", ...props }: BadgeProps) {
   const variants = {
-    default: "bg-primary text-primary-foreground",
+    default: "bg-primary/10 text-primary border border-primary/20",
     secondary: "bg-secondary text-secondary-foreground",
-    outline: "border border-input bg-transparent",
-    reading: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20",
-    read: "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20",
-    "not-started": "bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20",
-    abandoned: "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20",
+    outline: "border border-border bg-transparent",
+    reading: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
+    read: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20",
+    "not-started": "bg-muted text-muted-foreground border border-border",
+    abandoned: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20",
   };
 
   return (

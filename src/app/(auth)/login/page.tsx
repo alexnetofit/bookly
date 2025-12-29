@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui";
 import { Mail, Lock, ArrowRight } from "lucide-react";
@@ -46,34 +45,34 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f0f7ff] via-background to-[#e0f7fa] dark:from-[#0a1929] dark:via-background dark:to-[#0d2137] p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      {/* Subtle pattern background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-      <Card className="w-full max-w-md relative animate-fade-in">
-        <CardHeader className="text-center space-y-4">
+      <Card className="w-full max-w-md relative animate-fade-in border-border/50">
+        <CardHeader className="text-center space-y-6 pb-2">
+          {/* Logo */}
           <div className="mx-auto">
-            <Image
-              src="/logo.png"
-              alt="Bookly"
-              width={80}
-              height={80}
-              className="mx-auto"
-            />
+            <h1 className="font-serif text-5xl font-medium tracking-wide">Babel</h1>
+            <div className="mt-2 flex justify-center">
+              <svg width="60" height="12" viewBox="0 0 60 12" className="text-foreground/30">
+                <path d="M0 6 Q15 0 30 6 Q45 12 60 6" fill="none" stroke="currentColor" strokeWidth="1"/>
+              </svg>
+            </div>
           </div>
           <div>
-            <CardTitle className="text-2xl">Bem-vindo ao Bookly</CardTitle>
-            <CardDescription className="mt-2">
+            <CardTitle className="text-xl font-normal">Bem-vindo de volta</CardTitle>
+            <CardDescription className="mt-1">
               Entre para acessar sua biblioteca pessoal
             </CardDescription>
           </div>
         </CardHeader>
 
         <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-4">
             {error && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                 {error}
@@ -126,7 +125,7 @@ export default function LoginPage() {
 
             <p className="text-sm text-muted-foreground text-center">
               Não tem uma conta?{" "}
-              <Link href="/cadastro" className="text-primary hover:underline font-medium">
+              <Link href="/cadastro" className="text-foreground hover:underline font-medium">
                 Cadastre-se
               </Link>
             </p>

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks";
@@ -60,21 +59,14 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       <div className="h-16 flex items-center justify-between px-4 border-b">
         <Link 
           href="/dashboard" 
-          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           prefetch={true}
         >
-          <Image
-            src="/logo.png"
-            alt="Bookly"
-            width={32}
-            height={32}
-            className="shrink-0"
-          />
           <span className={cn(
-            "font-bold text-lg bg-gradient-to-r from-[#1e3a5f] to-[#00bcd4] dark:from-[#4dd0e1] dark:to-[#00bcd4] bg-clip-text text-transparent transition-opacity duration-200",
-            isCollapsed ? "opacity-0 w-0" : "opacity-100"
+            "font-serif text-2xl font-medium tracking-wide transition-opacity duration-200",
+            isCollapsed ? "text-lg" : "text-2xl"
           )}>
-            Bookly
+            {isCollapsed ? "B" : "Babel"}
           </span>
         </Link>
         <button
