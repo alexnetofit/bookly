@@ -18,7 +18,6 @@ function RedefinirSenhaContent() {
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClient();
 
   useEffect(() => {
