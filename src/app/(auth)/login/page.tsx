@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui";
 import { Mail, Lock, ArrowRight } from "lucide-react";
@@ -57,12 +56,10 @@ export default function LoginPage() {
         <CardHeader className="text-center space-y-6 pb-2">
           {/* Logo */}
           <div className="mx-auto">
-            <Image
+            <img
               src="/logo_cinza.png"
               alt="Babel"
-              width={140}
-              height={56}
-              className="dark:brightness-0 dark:invert"
+              className="h-14 w-auto dark:invert"
             />
           </div>
           <div>
