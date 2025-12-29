@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
+  Gift,
 } from "lucide-react";
 
 const navItems = [
@@ -35,6 +36,11 @@ const navItems = [
     label: "Comunidade",
     href: "/comunidade",
     icon: Users,
+  },
+  {
+    label: "Indique e Ganhe",
+    href: "/indique",
+    icon: Gift,
   },
 ];
 

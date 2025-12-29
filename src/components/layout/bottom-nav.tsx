@@ -11,6 +11,7 @@ import {
   Users,
   Settings,
   Shield,
+  Gift,
 } from "lucide-react";
 
 export function BottomNav() {
@@ -37,6 +38,11 @@ export function BottomNav() {
       label: "Social",
       href: "/comunidade",
       icon: Users,
+    },
+    {
+      label: "Indique",
+      href: "/indique",
+      icon: Gift,
     },
     // Show Admin for admins, otherwise show Config
     ...(profile?.is_admin
