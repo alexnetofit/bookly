@@ -31,32 +31,32 @@
 }
 
 .dark {
-  /* Dark Mode - Babel: Elegante e Escuro */
-  --background: 30 10% 8%;
-  --foreground: 30 15% 92%;
-  --card: 30 10% 11%;
-  --card-foreground: 30 15% 92%;
-  --popover: 30 10% 11%;
-  --popover-foreground: 30 15% 92%;
-  --primary: 30 20% 85%;
-  --primary-foreground: 30 10% 10%;
-  --secondary: 30 10% 16%;
-  --secondary-foreground: 30 15% 85%;
-  --muted: 30 10% 16%;
-  --muted-foreground: 30 10% 55%;
-  --accent: 35 35% 55%;
-  --accent-foreground: 30 10% 10%;
-  --destructive: 0 55% 45%;
+  /* Dark Mode - Babel: Elegante e Aconchegante */
+  --background: 30 8% 12%;
+  --foreground: 35 20% 95%;
+  --card: 30 8% 15%;
+  --card-foreground: 35 20% 95%;
+  --popover: 30 8% 15%;
+  --popover-foreground: 35 20% 95%;
+  --primary: 35 25% 90%;
+  --primary-foreground: 30 10% 12%;
+  --secondary: 30 8% 20%;
+  --secondary-foreground: 35 20% 90%;
+  --muted: 30 8% 20%;
+  --muted-foreground: 35 15% 65%;
+  --accent: 35 40% 60%;
+  --accent-foreground: 30 10% 12%;
+  --destructive: 0 55% 50%;
   --destructive-foreground: 0 0% 98%;
-  --border: 30 10% 18%;
-  --input: 30 10% 18%;
-  --ring: 30 20% 85%;
+  --border: 30 8% 22%;
+  --input: 30 8% 22%;
+  --ring: 35 25% 90%;
 
   /* Status Colors - Dark Mode */
-  --status-reading: 35 40% 55%;
-  --status-read: 145 30% 45%;
-  --status-not-started: 30 10% 50%;
-  --status-abandoned: 0 45% 50%;
+  --status-reading: 40 45% 60%;
+  --status-read: 150 35% 50%;
+  --status-not-started: 35 12% 55%;
+  --status-abandoned: 0 50% 55%;
 }
 
 @theme inline {
