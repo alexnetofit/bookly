@@ -24,6 +24,16 @@ function getSupabaseAdmin() {
   );
 }
 
+// Generate a random temporary password
+function generateTempPassword(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+  let password = "";
+  for (let i = 0; i < 16; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
+
 export async function POST(request: Request) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
@@ -63,20 +73,69 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find user by email
-    const { data: profile, error: findError } = await supabaseAdmin
+    const emailLower = payload.email.toLowerCase();
+    let userId: string;
+    let isNewUser = false;
+
+    // Try to find existing user by email
+    const { data: existingProfile } = await supabaseAdmin
       .from("users_profile")
       .select("id, email, full_name")
-      .eq("email", payload.email.toLowerCase())
+      .eq("email", emailLower)
       .single();
 
-    if (findError || !profile) {
-      return NextResponse.json(
-        { error: "User not found with this email" },
-        { status: 404 }
-      );
+    if (existingProfile) {
+      // User exists
+      userId = existingProfile.id;
+    } else {
+      // User doesn't exist - create new user
+      isNewUser = true;
+      
+      // Create user in Supabase Auth
+      const tempPassword = generateTempPassword();
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email: emailLower,
+        password: tempPassword,
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          full_name: payload.name || emailLower.split("@")[0],
+        },
+      });
+
+      if (createError || !newUser.user) {
+        console.error("Error creating user:", createError);
+        return NextResponse.json(
+          { error: "Failed to create user: " + (createError?.message || "Unknown error") },
+          { status: 500 }
+        );
+      }
+
+      userId = newUser.user.id;
+
+      // Wait a moment for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Update the profile with the name if provided
+      if (payload.name) {
+        await supabaseAdmin
+          .from("users_profile")
+          .update({ full_name: payload.name })
+          .eq("id", userId);
+      }
+
+      // Send password reset email so user can set their own password
+      const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email: emailLower,
+      });
+
+      if (resetError) {
+        console.error("Error sending reset email:", resetError);
+        // Don't fail the request, user can still use "forgot password" later
+      }
     }
 
+    // Calculate expiration date
     let expiresAt: Date;
     let message: string;
 
@@ -89,7 +148,9 @@ export async function POST(request: Request) {
       // Paid: calculate expiration based on plan
       expiresAt = new Date();
       expiresAt.setMonth(expiresAt.getMonth() + planDurations[payload.plan]);
-      message = "Subscription activated successfully";
+      message = isNewUser 
+        ? "User created and subscription activated successfully" 
+        : "Subscription activated successfully";
     }
 
     // Update user subscription
@@ -98,9 +159,9 @@ export async function POST(request: Request) {
       .update({
         plan: payload.plan,
         subscription_expires_at: expiresAt.toISOString(),
-        full_name: payload.name || profile.full_name,
+        full_name: payload.name || (existingProfile?.full_name ?? emailLower.split("@")[0]),
       })
-      .eq("id", profile.id);
+      .eq("id", userId);
 
     if (updateError) {
       console.error("Error updating subscription:", updateError);
@@ -118,6 +179,7 @@ export async function POST(request: Request) {
         plan: payload.plan,
         event: payload.event,
         expires_at: expiresAt.toISOString(),
+        new_user: isNewUser,
       },
     });
   } catch (error) {
@@ -149,6 +211,9 @@ export async function GET() {
       events: {
         paid: "Ativa assinatura com vencimento baseado no plano",
         refund: "Cancela assinatura (vencimento para ontem)",
+      },
+      notes: {
+        new_user: "Se o usuário não existir, será criado automaticamente e receberá email para definir senha",
       },
     },
   });
