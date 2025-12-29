@@ -59,7 +59,8 @@ export default function LoginPage() {
             <img
               src="/logo_cinza.png"
               alt="Babel"
-              className="h-14 w-auto dark:invert"
+              style={{ height: 56, width: 'auto' }}
+              className="dark:invert"
             />
           </div>
           <div>
