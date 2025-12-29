@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/toast";
 import { Button, Input, Textarea, Select, StarRating } from "@/components/ui";
 import { BookSearch } from "./book-search";
 import type { Book, ReadingStatus, BookSearchResult } from "@/types/database";
-import { Save, ArrowLeft, Search, PenLine } from "lucide-react";
+import { Save, ArrowLeft, Search, PenLine, Users, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BookFormProps {
@@ -43,6 +43,10 @@ export function BookForm({ book, mode }: BookFormProps) {
     paginas_lidas: book?.paginas_lidas?.toString() || "0",
   });
 
+  // Estados para postagem na comunidade
+  const [postToCommunity, setPostToCommunity] = useState(false);
+  const [hasSpoiler, setHasSpoiler] = useState(false);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
@@ -64,6 +68,11 @@ export function BookForm({ book, mode }: BookFormProps) {
     const paginasLidas = parseInt(formData.paginas_lidas) || 0;
     if (paginasLidas > numPaginas) {
       newErrors.paginas_lidas = "Páginas lidas não pode ser maior que o total";
+    }
+
+    // Se vai postar na comunidade, comentário é obrigatório
+    if (postToCommunity && !formData.descricao.trim()) {
+      newErrors.descricao = "Comentário é obrigatório para postar na comunidade";
     }
 
     setErrors(newErrors);
@@ -105,14 +114,40 @@ export function BookForm({ book, mode }: BookFormProps) {
           return;
         }
 
-        const { error } = await supabase.from("books").insert({
-          ...bookData,
-          user_id: user.id,
-        });
+        // Inserir livro e pegar o ID retornado
+        const { data: insertedBook, error } = await supabase
+          .from("books")
+          .insert({
+            ...bookData,
+            user_id: user.id,
+          })
+          .select("id")
+          .single();
 
         if (error) throw error;
 
-        showToast("Livro adicionado com sucesso!", "success");
+        // Se marcou para postar na comunidade, criar o post
+        if (postToCommunity && insertedBook) {
+          const { error: postError } = await supabase
+            .from("community_posts")
+            .insert({
+              user_id: user.id,
+              book_id: insertedBook.id,
+              book_title: formData.nome_do_livro.trim(),
+              book_author: formData.autor.trim(),
+              content: formData.descricao.trim(),
+              has_spoiler: hasSpoiler,
+            });
+
+          if (postError) {
+            console.error("Erro ao criar post:", postError);
+            showToast("Livro adicionado, mas erro ao postar na comunidade", "error");
+          } else {
+            showToast("Livro adicionado e postado na comunidade!", "success");
+          }
+        } else {
+          showToast("Livro adicionado com sucesso!", "success");
+        }
       } else {
         const { error } = await supabase
           .from("books")
@@ -147,7 +182,7 @@ export function BookForm({ book, mode }: BookFormProps) {
       nome_do_livro: book.title,
       autor: book.authors.join(", ") || "",
       numero_de_paginas: book.page_count?.toString() || prev.numero_de_paginas,
-      descricao: book.description || prev.descricao,
+      // NÃO preencher descrição/comentários automaticamente
     }));
     // Limpa erros após preencher
     setErrors({});
@@ -294,7 +329,7 @@ export function BookForm({ book, mode }: BookFormProps) {
 
         <div className="space-y-2">
           <label htmlFor="descricao" className="text-sm font-medium">
-            Descrição / Anotações
+            Comentários
           </label>
           <Textarea
             id="descricao"
@@ -303,7 +338,79 @@ export function BookForm({ book, mode }: BookFormProps) {
             placeholder="Suas impressões sobre o livro..."
             className="min-h-[120px]"
           />
+          {errors.descricao && (
+            <p className="text-sm text-destructive">{errors.descricao}</p>
+          )}
         </div>
+
+        {/* Toggle Postar na Comunidade - apenas no modo criar */}
+        {mode === "create" && (
+          <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
+            <label className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="font-medium">Postar na Comunidade</p>
+                  <p className="text-sm text-muted-foreground">
+                    Compartilhe este livro com outros leitores
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={postToCommunity}
+                onClick={() => {
+                  setPostToCommunity(!postToCommunity);
+                  if (postToCommunity) setHasSpoiler(false);
+                }}
+                className={cn(
+                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                  postToCommunity ? "bg-primary" : "bg-muted-foreground/30"
+                )}
+              >
+                <span
+                  className={cn(
+                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                    postToCommunity ? "translate-x-6" : "translate-x-1"
+                  )}
+                />
+              </button>
+            </label>
+
+            {/* Toggle Spoiler - só aparece se Postar na Comunidade estiver ativo */}
+            {postToCommunity && (
+              <label className="flex items-center justify-between cursor-pointer pt-3 border-t">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  <div>
+                    <p className="font-medium">Contém spoiler?</p>
+                    <p className="text-sm text-muted-foreground">
+                      O conteúdo ficará ofuscado até o leitor revelar
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={hasSpoiler}
+                  onClick={() => setHasSpoiler(!hasSpoiler)}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                    hasSpoiler ? "bg-amber-500" : "bg-muted-foreground/30"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                      hasSpoiler ? "translate-x-6" : "translate-x-1"
+                    )}
+                  />
+                </button>
+              </label>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex gap-4 pt-4">
