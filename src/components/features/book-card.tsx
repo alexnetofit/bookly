@@ -70,7 +70,7 @@ export function BookCard({ book, onDelete }: BookCardProps) {
             {/* Book Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-1">
-                <h3 className="font-semibold text-base leading-tight line-clamp-2" title={book.nome_do_livro}>
+                <h3 className="font-semibold text-sm leading-snug line-clamp-3" title={book.nome_do_livro}>
                   {book.nome_do_livro}
                 </h3>
                 <Badge variant={status.variant} className="flex-shrink-0 ml-1">{status.label}</Badge>
