@@ -8,7 +8,6 @@ import { Card, CardContent, Badge, Progress, StarRating, Button, Modal } from "@
 import { cn } from "@/lib/utils";
 import type { Book, ReadingStatus } from "@/types/database";
 import { Edit, Trash2, BookOpen } from "lucide-react";
-import Image from "next/image";
 
 interface BookCardProps {
   book: Book;
@@ -57,12 +56,13 @@ export function BookCard({ book, onDelete }: BookCardProps) {
             {/* Book Cover */}
             {book.cover_url && (
               <div className="flex-shrink-0">
-                <Image
+                <img
                   src={book.cover_url}
                   alt={book.nome_do_livro}
-                  width={60}
-                  height={90}
-                  className="rounded shadow-sm object-cover"
+                  className="w-[60px] h-[90px] rounded shadow-sm object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               </div>
             )}

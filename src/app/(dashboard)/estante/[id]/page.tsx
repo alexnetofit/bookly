@@ -150,6 +150,9 @@ export default function BookDetailPage() {
             src={book.cover_url}
             alt={book.nome_do_livro}
             className="w-24 h-36 rounded-lg shadow-lg object-cover flex-shrink-0"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
           />
         )}
         
