@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
   isOpen: boolean;
@@ -13,6 +14,13 @@ interface ModalProps {
 }
 
 function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  // Only render portal on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -41,10 +49,10 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50">
+  const modalContent = (
+    <div className="fixed inset-0 z-[100]">
       {/* Overlay */}
       <div 
         className="absolute inset-0 bg-black/50"
@@ -80,6 +88,9 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
       </div>
     </div>
   );
+
+  // Use portal to render outside the DOM hierarchy
+  return createPortal(modalContent, document.body);
 }
 
 export { Modal };
