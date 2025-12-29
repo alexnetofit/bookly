@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/hooks";
 import {
   LayoutDashboard,
   Library,
@@ -12,6 +13,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Shield,
 } from "lucide-react";
 
 const navItems = [
@@ -44,6 +46,7 @@ interface SidebarProps {
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const { profile } = useUser();
 
   return (
     <aside
@@ -121,6 +124,31 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             </Link>
           );
         })}
+
+        {/* Admin link - only for admins */}
+        {profile?.is_admin && (
+          <Link
+            href="/admin"
+            prefetch={true}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg click-scale",
+              "transition-all duration-150",
+              pathname === "/admin" || pathname.startsWith("/admin/")
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+              isCollapsed && "justify-center px-2"
+            )}
+            title={isCollapsed ? "Admin" : undefined}
+          >
+            <Shield className="w-5 h-5 shrink-0" />
+            <span className={cn(
+              "font-medium transition-opacity duration-200",
+              isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
+            )}>
+              Admin
+            </span>
+          </Link>
+        )}
       </nav>
 
       {/* Settings at bottom */}

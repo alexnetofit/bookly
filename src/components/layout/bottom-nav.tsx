@@ -3,44 +3,58 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/hooks";
 import {
   LayoutDashboard,
   Library,
   Target,
   Users,
   Settings,
+  Shield,
 } from "lucide-react";
-
-const navItems = [
-  {
-    label: "Home",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Estante",
-    href: "/estante",
-    icon: Library,
-  },
-  {
-    label: "Metas",
-    href: "/metas",
-    icon: Target,
-  },
-  {
-    label: "Social",
-    href: "/comunidade",
-    icon: Users,
-  },
-  {
-    label: "Config",
-    href: "/configuracoes",
-    icon: Settings,
-  },
-];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { profile } = useUser();
+
+  const navItems = [
+    {
+      label: "Home",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Estante",
+      href: "/estante",
+      icon: Library,
+    },
+    {
+      label: "Metas",
+      href: "/metas",
+      icon: Target,
+    },
+    {
+      label: "Social",
+      href: "/comunidade",
+      icon: Users,
+    },
+    // Show Admin for admins, otherwise show Config
+    ...(profile?.is_admin
+      ? [
+          {
+            label: "Admin",
+            href: "/admin",
+            icon: Shield,
+          },
+        ]
+      : [
+          {
+            label: "Config",
+            href: "/configuracoes",
+            icon: Settings,
+          },
+        ]),
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t md:hidden safe-area-bottom">
@@ -71,5 +85,3 @@ export function BottomNav() {
     </nav>
   );
 }
-
-
