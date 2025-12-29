@@ -32,43 +32,27 @@ export function AdminDashboard() {
       setIsLoading(true);
 
       try {
-        // Buscar todos os usuários
-        const { data: users } = await supabase
-          .from("users_profile")
-          .select("id, subscription_expires_at, is_admin, created_at");
+        // Get session token for API auth
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.error("No session found");
+          return;
+        }
 
-        // Buscar total de livros
-        const { count: booksCount } = await supabase
-          .from("books")
-          .select("*", { count: "exact", head: true });
-
-        // Buscar total de posts
-        const { count: postsCount } = await supabase
-          .from("community_posts")
-          .select("*", { count: "exact", head: true });
-
-        const now = new Date();
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-        const totalUsers = users?.length || 0;
-        const activeUsers =
-          users?.filter((u) => {
-            if (u.is_admin) return true;
-            if (!u.subscription_expires_at) return false;
-            return new Date(u.subscription_expires_at) > now;
-          }).length || 0;
-
-        const newUsersWeek =
-          users?.filter((u) => new Date(u.created_at) > weekAgo).length || 0;
-
-        setStats({
-          totalUsers,
-          activeUsers,
-          inactiveUsers: totalUsers - activeUsers,
-          totalBooks: booksCount || 0,
-          totalPosts: postsCount || 0,
-          newUsersWeek,
+        // Fetch stats from API (bypasses RLS)
+        const response = await fetch("/api/admin/stats", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
         });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch stats");
+        }
+
+        const data = await response.json();
+        setStats(data);
       } catch (error) {
         console.error("Error fetching stats:", error);
       } finally {
