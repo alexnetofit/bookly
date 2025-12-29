@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { BottomNav } from "./bottom-nav";
@@ -57,16 +56,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Mobile header - with logo */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-background/80 backdrop-blur-md border-b flex items-center justify-center px-4">
-        <Image
-          src="/logo.png"
-          alt="Bookly"
-          width={28}
-          height={28}
-          className="mr-2"
+        <img
+          src="/logo_cinza.png"
+          alt="Babel"
+          style={{ height: 32, width: 'auto' }}
+          className="logo-themed"
         />
-        <span className="font-bold text-lg bg-gradient-to-r from-[#1e3a5f] to-[#00bcd4] dark:from-[#4dd0e1] dark:to-[#00bcd4] bg-clip-text text-transparent">
-          Bookly
-        </span>
       </header>
 
       {/* Main content */}
