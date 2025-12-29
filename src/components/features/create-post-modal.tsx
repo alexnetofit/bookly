@@ -12,6 +12,7 @@ interface BookOption {
   id: string;
   nome_do_livro: string;
   autor: string;
+  cover_url: string | null;
 }
 
 interface CreatePostModalProps {
@@ -49,7 +50,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
     try {
       const { data } = await supabase
         .from("books")
-        .select("id, nome_do_livro, autor")
+        .select("id, nome_do_livro, autor, cover_url")
         .order("nome_do_livro");
 
       setBooks((data as BookOption[]) || []);
