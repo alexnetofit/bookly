@@ -377,6 +377,30 @@ CREATE POLICY "Users can delete own comments"
 -- Nota: O Supabase service_role key já tem bypass RLS por padrão
 
 -- =============================================
+-- TABELA: book_search_cache
+-- Cache de buscas de livros externos
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS public.book_search_cache (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  query TEXT NOT NULL UNIQUE,
+  results_json JSONB NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_book_search_cache_query ON public.book_search_cache(query);
+CREATE INDEX idx_book_search_cache_expires ON public.book_search_cache(expires_at);
+
+-- Não precisa de RLS pois será acessado apenas pelo service role
+ALTER TABLE public.book_search_cache ENABLE ROW LEVEL SECURITY;
+
+-- Permitir leitura pública do cache (para performance)
+CREATE POLICY "Anyone can read cache"
+  ON public.book_search_cache FOR SELECT
+  USING (true);
+
+-- =============================================
 -- FIM DO SCHEMA
 -- =============================================
 

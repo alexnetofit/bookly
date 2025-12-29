@@ -2,6 +2,25 @@ export type ReadingStatus = "nao_comecou" | "lendo" | "lido" | "desistido";
 
 export type PlanType = "explorer" | "traveler" | "devourer" | null;
 
+export interface BookSearchResult {
+  id: string;
+  title: string;
+  authors: string[];
+  cover_url: string | null;
+  page_count: number | null;
+  published_year: string | null;
+  description: string | null;
+  source: "google" | "openlibrary";
+}
+
+export interface BookSearchCache {
+  id: string;
+  query: string;
+  results_json: BookSearchResult[];
+  expires_at: string;
+  created_at: string;
+}
+
 export interface UserProfile {
   id: string;
   email: string;

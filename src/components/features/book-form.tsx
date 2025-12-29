@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
 import { Button, Input, Textarea, Select, StarRating } from "@/components/ui";
-import type { Book, ReadingStatus } from "@/types/database";
-import { Save, ArrowLeft } from "lucide-react";
+import { BookSearch } from "./book-search";
+import type { Book, ReadingStatus, BookSearchResult } from "@/types/database";
+import { Save, ArrowLeft, Search, PenLine } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface BookFormProps {
   book?: Book;
@@ -20,12 +22,17 @@ const statusOptions = [
   { value: "desistido", label: "Desisti" },
 ];
 
+type InputMode = "search" | "manual";
+
 export function BookForm({ book, mode }: BookFormProps) {
   const router = useRouter();
   const supabase = createClient();
   const { showToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [inputMode, setInputMode] = useState<InputMode>(
+    mode === "edit" ? "manual" : "search"
+  );
   const [formData, setFormData] = useState({
     nome_do_livro: book?.nome_do_livro || "",
     autor: book?.autor || "",
@@ -134,6 +141,18 @@ export function BookForm({ book, mode }: BookFormProps) {
     }
   };
 
+  const handleBookSelect = (book: BookSearchResult) => {
+    setFormData((prev) => ({
+      ...prev,
+      nome_do_livro: book.title,
+      autor: book.authors.join(", ") || "",
+      numero_de_paginas: book.page_count?.toString() || prev.numero_de_paginas,
+      descricao: book.description || prev.descricao,
+    }));
+    // Limpa erros após preencher
+    setErrors({});
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       <div className="flex items-center gap-4 mb-6">
@@ -150,6 +169,46 @@ export function BookForm({ book, mode }: BookFormProps) {
         </h1>
       </div>
 
+      {/* Tabs para modo de entrada - apenas no modo criar */}
+      {mode === "create" && (
+        <div className="flex gap-2 p-1 bg-muted rounded-lg">
+          <button
+            type="button"
+            onClick={() => setInputMode("search")}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors",
+              inputMode === "search"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Search className="w-4 h-4" />
+            Buscar livro
+          </button>
+          <button
+            type="button"
+            onClick={() => setInputMode("manual")}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors",
+              inputMode === "manual"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <PenLine className="w-4 h-4" />
+            Preencher manualmente
+          </button>
+        </div>
+      )}
+
+      {/* Componente de busca */}
+      {mode === "create" && inputMode === "search" && (
+        <div className="bg-card border rounded-lg p-4">
+          <BookSearch onSelect={handleBookSelect} />
+        </div>
+      )}
+
+      {/* Formulário */}
       <div className="grid gap-6">
         <div className="space-y-2">
           <label htmlFor="nome_do_livro" className="text-sm font-medium">
@@ -259,4 +318,3 @@ export function BookForm({ book, mode }: BookFormProps) {
     </form>
   );
 }
-

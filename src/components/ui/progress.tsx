@@ -32,3 +32,4 @@ function Progress({ value, max = 100, showLabel = false, className, ...props }: 
 
 export { Progress };
 
+
