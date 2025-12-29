@@ -113,7 +113,7 @@ export function BookCard({ book, onDelete }: BookCardProps) {
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-2 pt-2 border-t opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-2 pt-2 border-t">
             <Link href={`/estante/${book.id}`} className="flex-1">
               <Button variant="ghost" size="sm" className="w-full">
                 <BookOpen className="w-4 h-4 mr-2" />
