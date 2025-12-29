@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export const dynamic = "force-dynamic";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { uploadAvatar } from "@/lib/supabase/storage";
 import { useUser } from "@/hooks/useUser";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useToast } from "@/components/ui/toast";
@@ -17,7 +18,7 @@ import {
   Button,
   Input,
 } from "@/components/ui";
-import { User, Sun, Moon, LogOut, Save, Shield, Calendar } from "lucide-react";
+import { User, Sun, Moon, LogOut, Save, Shield, Calendar, Camera, AtSign } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 export default function ConfiguracoesPage() {
@@ -26,21 +27,67 @@ export default function ConfiguracoesPage() {
   const router = useRouter();
   const supabase = createClient();
   const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [fullName, setFullName] = useState(profile?.full_name || "");
+  const [username, setUsername] = useState(profile?.username || "");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("Selecione uma imagem válida", "error");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("A imagem deve ter no máximo 2MB", "error");
+      return;
+    }
+
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
+      let newAvatarUrl = profile?.avatar_url;
+
+      // Upload avatar if changed
+      if (avatarFile && profile) {
+        setIsUploadingAvatar(true);
+        const { url, error } = await uploadAvatar(profile.id, avatarFile);
+        if (error) {
+          showToast(error, "error");
+          setIsSaving(false);
+          setIsUploadingAvatar(false);
+          return;
+        }
+        newAvatarUrl = url;
+        setIsUploadingAvatar(false);
+      }
+
+      // Update profile
       const { error } = await supabase
         .from("users_profile")
-        .update({ full_name: fullName.trim() || null })
+        .update({
+          full_name: fullName.trim() || null,
+          username: username.trim() || null,
+          avatar_url: newAvatarUrl,
+        })
         .eq("id", profile!.id);
 
       if (error) throw error;
 
       showToast("Perfil atualizado com sucesso!", "success");
+      setAvatarFile(null);
+      setAvatarPreview(null);
       refetch();
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -66,6 +113,14 @@ export default function ConfiguracoesPage() {
     ? new Date(profile.subscription_expires_at) > new Date()
     : false;
 
+  // Get initials for avatar fallback
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return "?";
+    return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+  };
+
+  const displayAvatar = avatarPreview || profile?.avatar_url;
+
   return (
     <div className="space-y-8 max-w-2xl">
       {/* Header */}
@@ -85,7 +140,50 @@ export default function ConfiguracoesPage() {
           </CardTitle>
           <CardDescription>Suas informações pessoais</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
+          {/* Avatar upload */}
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center overflow-hidden">
+                {displayAvatar ? (
+                  <img
+                    src={displayAvatar}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl font-semibold text-primary">
+                    {getInitials(profile?.full_name)}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarSelect}
+                className="hidden"
+              />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">Foto de perfil</p>
+              <p className="text-sm text-muted-foreground">
+                JPG, PNG ou GIF. Máximo 2MB.
+              </p>
+              {avatarPreview && (
+                <p className="text-sm text-primary mt-1">
+                  Nova foto selecionada. Clique em salvar para aplicar.
+                </p>
+              )}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label className="text-sm font-medium">Nome completo</label>
             <Input
@@ -96,6 +194,21 @@ export default function ConfiguracoesPage() {
           </div>
 
           <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <AtSign className="w-4 h-4" />
+              Username
+            </label>
+            <Input
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+              placeholder="seu_username"
+            />
+            <p className="text-xs text-muted-foreground">
+              Será exibido na comunidade. Use apenas letras minúsculas, números e underline.
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <label className="text-sm font-medium">Email</label>
             <Input value={profile?.email || ""} disabled className="bg-muted" />
             <p className="text-xs text-muted-foreground">
@@ -103,9 +216,9 @@ export default function ConfiguracoesPage() {
             </p>
           </div>
 
-          <Button onClick={handleSaveProfile} isLoading={isSaving}>
+          <Button onClick={handleSaveProfile} isLoading={isSaving || isUploadingAvatar}>
             <Save className="w-4 h-4 mr-2" />
-            Salvar alterações
+            {isUploadingAvatar ? "Enviando foto..." : "Salvar alterações"}
           </Button>
         </CardContent>
       </Card>
@@ -227,4 +340,3 @@ export default function ConfiguracoesPage() {
     </div>
   );
 }
-

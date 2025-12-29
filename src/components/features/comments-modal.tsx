@@ -62,7 +62,7 @@ export function CommentsModal({ isOpen, onClose, postId }: CommentsModalProps) {
         .from("post_comments")
         .select(`
           *,
-          user_profile:users_profile(id, full_name, avatar_url, email)
+          user_profile:users_profile(id, full_name, username, avatar_url, email)
         `)
         .eq("post_id", postId)
         .order("created_at", { ascending: true });

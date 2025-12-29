@@ -43,6 +43,11 @@ export function BookForm({ book, mode }: BookFormProps) {
     paginas_lidas: book?.paginas_lidas?.toString() || "0",
   });
 
+  // Estado para capa do livro
+  const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(
+    book?.cover_url || null
+  );
+
   // Estados para postagem na comunidade
   const [postToCommunity, setPostToCommunity] = useState(false);
   const [hasSpoiler, setHasSpoiler] = useState(false);
@@ -101,6 +106,7 @@ export function BookForm({ book, mode }: BookFormProps) {
         autor: formData.autor.trim(),
         numero_de_paginas: numeroDePaginas,
         descricao: formData.descricao.trim() || null,
+        cover_url: selectedCoverUrl,
         rating: formData.rating || null,
         status_leitura: statusLeitura,
         paginas_lidas: paginasLidas,
@@ -135,6 +141,7 @@ export function BookForm({ book, mode }: BookFormProps) {
               book_id: insertedBook.id,
               book_title: formData.nome_do_livro.trim(),
               book_author: formData.autor.trim(),
+              book_cover_url: selectedCoverUrl,
               content: formData.descricao.trim(),
               has_spoiler: hasSpoiler,
             });
@@ -184,6 +191,8 @@ export function BookForm({ book, mode }: BookFormProps) {
       numero_de_paginas: book.page_count?.toString() || prev.numero_de_paginas,
       // NÃO preencher descrição/comentários automaticamente
     }));
+    // Salvar capa do livro
+    setSelectedCoverUrl(book.cover_url);
     // Limpa erros após preencher
     setErrors({});
   };

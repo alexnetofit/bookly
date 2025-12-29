@@ -139,17 +139,31 @@ export default function BookDetailPage() {
   return (
     <div className="max-w-3xl space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+      <div className="flex items-start gap-4">
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="mt-1">
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold">{book.nome_do_livro}</h1>
-          <p className="text-muted-foreground">{book.autor}</p>
+        
+        {/* Book cover */}
+        {book.cover_url && (
+          <img
+            src={book.cover_url}
+            alt={book.nome_do_livro}
+            className="w-24 h-36 rounded-lg shadow-lg object-cover flex-shrink-0"
+          />
+        )}
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">{book.nome_do_livro}</h1>
+              <p className="text-muted-foreground">{book.autor}</p>
+            </div>
+            <Badge variant={status.variant} className="text-sm flex-shrink-0">
+              {status.label}
+            </Badge>
+          </div>
         </div>
-        <Badge variant={status.variant} className="text-sm">
-          {status.label}
-        </Badge>
       </div>
 
       {/* Main content */}

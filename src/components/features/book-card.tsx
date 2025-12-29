@@ -8,6 +8,7 @@ import { Card, CardContent, Badge, Progress, StarRating, Button, Modal } from "@
 import { cn } from "@/lib/utils";
 import type { Book, ReadingStatus } from "@/types/database";
 import { Edit, Trash2, BookOpen } from "lucide-react";
+import Image from "next/image";
 
 interface BookCardProps {
   book: Book;
@@ -52,20 +53,42 @@ export function BookCard({ book, onDelete }: BookCardProps) {
     <>
       <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
         <CardContent className="p-5">
-          <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex gap-4 mb-3">
+            {/* Book Cover */}
+            {book.cover_url && (
+              <div className="flex-shrink-0">
+                <Image
+                  src={book.cover_url}
+                  alt={book.nome_do_livro}
+                  width={60}
+                  height={90}
+                  className="rounded shadow-sm object-cover"
+                />
+              </div>
+            )}
+            
+            {/* Book Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg truncate" title={book.nome_do_livro}>
-                {book.nome_do_livro}
-              </h3>
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <h3 className="font-semibold text-lg truncate" title={book.nome_do_livro}>
+                  {book.nome_do_livro}
+                </h3>
+                <Badge variant={status.variant} className="flex-shrink-0">{status.label}</Badge>
+              </div>
               <p className="text-sm text-muted-foreground truncate" title={book.autor}>
                 {book.autor}
               </p>
+              {/* Rating inline when has cover */}
+              {book.rating && book.cover_url && (
+                <div className="mt-2">
+                  <StarRating value={book.rating} readonly size="sm" />
+                </div>
+              )}
             </div>
-            <Badge variant={status.variant}>{status.label}</Badge>
           </div>
 
-          {/* Rating */}
-          {book.rating && (
+          {/* Rating - only show here if no cover */}
+          {book.rating && !book.cover_url && (
             <div className="mb-3">
               <StarRating value={book.rating} readonly size="sm" />
             </div>

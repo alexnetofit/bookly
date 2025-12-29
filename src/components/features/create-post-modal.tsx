@@ -87,6 +87,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
         book_id: selectedBookId || null,
         book_title: selectedBook?.nome_do_livro || null,
         book_author: selectedBook?.autor || null,
+        book_cover_url: selectedBook?.cover_url || null,
       });
 
       if (error) throw error;

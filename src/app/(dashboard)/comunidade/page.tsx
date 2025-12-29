@@ -38,7 +38,7 @@ export default function ComunidadePage() {
         .from("community_posts")
         .select(`
           *,
-          user_profile:users_profile(id, full_name, avatar_url, email)
+          user_profile:users_profile(id, full_name, username, avatar_url, email)
         `)
         .order("created_at", { ascending: false })
         .limit(50);

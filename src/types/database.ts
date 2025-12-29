@@ -25,6 +25,7 @@ export interface UserProfile {
   id: string;
   email: string;
   full_name: string | null;
+  username: string | null;
   avatar_url: string | null;
   plan: PlanType;
   subscription_expires_at: string | null;
@@ -39,6 +40,7 @@ export interface Book {
   autor: string;
   numero_de_paginas: number;
   descricao: string | null;
+  cover_url: string | null;
   rating: number | null;
   status_leitura: ReadingStatus;
   paginas_lidas: number;
@@ -60,6 +62,7 @@ export interface CommunityPost {
   book_id: string | null;
   book_title: string | null;
   book_author: string | null;
+  book_cover_url: string | null;
   content: string;
   has_spoiler: boolean;
   likes_count: number;

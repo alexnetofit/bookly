@@ -70,10 +70,11 @@ export function PostCard({ post, onDelete, onOpenComments, onUpdate }: PostCardP
     return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
   };
 
-  // Get handle from email
-  const getHandle = (email: string | undefined) => {
-    if (!email) return "";
-    return "@" + email.split("@")[0];
+  // Get handle from username or email
+  const getHandle = (profile: UserProfile | undefined) => {
+    if (profile?.username) return "@" + profile.username;
+    if (profile?.email) return "@" + profile.email.split("@")[0];
+    return "";
   };
 
   // Check if user has liked this post
@@ -212,7 +213,7 @@ export function PostCard({ post, onDelete, onOpenComments, onUpdate }: PostCardP
                   {post.user_profile?.full_name || "Usuário"}
                 </span>
                 <span className="text-muted-foreground text-sm truncate">
-                  {getHandle(post.user_profile?.email)}
+                  {getHandle(post.user_profile)}
                 </span>
                 <span className="text-muted-foreground">·</span>
                 <span className="text-muted-foreground text-sm">
@@ -276,14 +277,22 @@ export function PostCard({ post, onDelete, onOpenComments, onUpdate }: PostCardP
               )}
             </div>
 
-            {/* Book reference */}
+            {/* Book reference with cover */}
             {post.book_title && (
-              <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>
-                  {post.book_title}
-                  {post.book_author && <span className="opacity-70"> · {post.book_author}</span>}
-                </span>
+              <div className="flex items-center gap-2 mt-2 p-2 bg-muted/50 rounded-lg">
+                {post.book_cover_url && (
+                  <img
+                    src={post.book_cover_url}
+                    alt={post.book_title}
+                    className="w-10 h-14 rounded shadow-sm object-cover flex-shrink-0"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{post.book_title}</p>
+                  {post.book_author && (
+                    <p className="text-xs text-muted-foreground truncate">{post.book_author}</p>
+                  )}
+                </div>
               </div>
             )}
 
