@@ -33,15 +33,17 @@ import {
 
 const planOptions = [
   { value: "", label: "Sem plano" },
-  { value: "explorer", label: "Explorador (3 meses)" },
-  { value: "traveler", label: "Viajante (6 meses)" },
-  { value: "devourer", label: "Devorador (12 meses)" },
+  { value: "mensal", label: "Mensal (1 mês)" },
+  { value: "trimestral", label: "Trimestral (3 meses)" },
+  { value: "semestral", label: "Semestral (6 meses)" },
+  { value: "anual", label: "Anual (12 meses)" },
 ];
 
 const planDurations: Record<string, number> = {
-  explorer: 3,
-  traveler: 6,
-  devourer: 12,
+  mensal: 1,
+  trimestral: 3,
+  semestral: 6,
+  anual: 12,
 };
 
 const filterOptions = [

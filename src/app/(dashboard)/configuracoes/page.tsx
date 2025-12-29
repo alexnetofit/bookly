@@ -103,7 +103,12 @@ export default function ConfiguracoesPage() {
     router.refresh();
   };
 
-  const planNames = {
+  const planNames: Record<string, string> = {
+    mensal: "Mensal (1 mês)",
+    trimestral: "Trimestral (3 meses)",
+    semestral: "Semestral (6 meses)",
+    anual: "Anual (12 meses)",
+    // Legacy plans
     explorer: "Explorador de Páginas (3 meses)",
     traveler: "Viajante de Histórias (6 meses)",
     devourer: "Devorador de Mundos (12 meses)",

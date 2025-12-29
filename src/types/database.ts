@@ -1,6 +1,6 @@
 export type ReadingStatus = "nao_comecou" | "lendo" | "lido" | "desistido";
 
-export type PlanType = "explorer" | "traveler" | "devourer" | null;
+export type PlanType = "mensal" | "trimestral" | "semestral" | "anual" | "explorer" | "traveler" | "devourer" | null;
 
 export interface BookSearchResult {
   id: string;
