@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks";
@@ -59,15 +60,16 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       <div className="h-16 flex items-center justify-between px-4 border-b">
         <Link 
           href="/dashboard" 
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          className="flex items-center hover:opacity-80 transition-opacity"
           prefetch={true}
         >
-          <span className={cn(
-            "font-serif text-2xl font-medium tracking-wide transition-opacity duration-200",
-            isCollapsed ? "text-lg" : "text-2xl"
-          )}>
-            {isCollapsed ? "B" : "Babel"}
-          </span>
+          <Image
+            src="/logo_cinza.png"
+            alt="Babel"
+            width={isCollapsed ? 32 : 100}
+            height={isCollapsed ? 32 : 40}
+            className="dark:brightness-0 dark:invert transition-all duration-200"
+          />
         </Link>
         <button
           onClick={onToggle}

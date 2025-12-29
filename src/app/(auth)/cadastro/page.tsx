@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui";
 import { Mail, Lock, User, ArrowRight, CheckCircle } from "lucide-react";
@@ -98,12 +99,13 @@ export default function CadastroPage() {
         <CardHeader className="text-center space-y-6 pb-2">
           {/* Logo */}
           <div className="mx-auto">
-            <h1 className="font-serif text-5xl font-medium tracking-wide">Babel</h1>
-            <div className="mt-2 flex justify-center">
-              <svg width="60" height="12" viewBox="0 0 60 12" className="text-foreground/30">
-                <path d="M0 6 Q15 0 30 6 Q45 12 60 6" fill="none" stroke="currentColor" strokeWidth="1"/>
-              </svg>
-            </div>
+            <Image
+              src="/logo_cinza.png"
+              alt="Babel"
+              width={140}
+              height={56}
+              className="dark:brightness-0 dark:invert"
+            />
           </div>
           <div>
             <CardTitle className="text-xl font-normal">Crie sua conta</CardTitle>
