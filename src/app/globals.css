@@ -276,3 +276,12 @@ input, textarea, select, button {
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* Logo themed: escura no light mode, branca no dark mode */
+.logo-themed {
+  filter: brightness(0);
+}
+
+.dark .logo-themed {
+  filter: brightness(1) invert(1);
+}

@@ -66,7 +66,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             src="/logo_cinza.png"
             alt="Babel"
             style={{ width: isCollapsed ? 32 : 100, height: 'auto' }}
-            className="brightness-0 dark:brightness-100 dark:invert"
+            className="logo-themed"
           />
         </Link>
         <button
