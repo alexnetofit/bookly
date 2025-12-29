@@ -124,10 +124,10 @@ export async function POST(request: Request) {
       }
 
       // Send password reset email so user can set their own password
-      const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-        type: "recovery",
-        email: emailLower,
-      });
+      const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(
+        emailLower,
+        { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.booklyoficial.com'}/login` }
+      );
 
       if (resetError) {
         console.error("Error sending reset email:", resetError);
