@@ -4,12 +4,13 @@ import { useEffect, useState, useCallback } from "react";
 
 export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/hooks/useUser";
 import { PostCard } from "@/components/features/post-card";
 import { CreatePostModal } from "@/components/features/create-post-modal";
 import { CommentsModal } from "@/components/features/comments-modal";
 import { Button, Skeleton, EmptyState } from "@/components/ui";
 import type { CommunityPost, UserProfile } from "@/types/database";
-import { Plus, Users, RefreshCw } from "lucide-react";
+import { Plus, Users, RefreshCw, Feather } from "lucide-react";
 
 interface PostWithRelations extends CommunityPost {
   user_profile?: UserProfile;
@@ -23,6 +24,7 @@ export default function ComunidadePage() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const supabase = createClient();
+  const { profile } = useUser();
 
   const fetchPosts = useCallback(async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) {
@@ -55,52 +57,86 @@ export default function ComunidadePage() {
   }, [fetchPosts]);
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Comunidade</h1>
-          <p className="text-muted-foreground mt-1">
-            Compartilhe suas leituras e descubra recomendações
-          </p>
-        </div>
-        <div className="flex gap-3">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b px-4 py-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold">Comunidade</h1>
           <Button
-            variant="outline"
+            variant="ghost"
+            size="icon"
             onClick={() => fetchPosts(true)}
             disabled={isRefreshing}
+            className="rounded-full"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-            Atualizar
-          </Button>
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo post
+            <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
         </div>
       </div>
 
-      {/* Posts grid */}
+      {/* Composer prompt */}
+      <div 
+        className="flex items-center gap-4 p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={() => setShowCreateModal(true)}
+      >
+        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt="Seu avatar"
+              className="w-full h-full rounded-full object-cover"
+            />
+          ) : (
+            <span className="text-lg font-semibold text-primary">
+              {profile?.full_name?.charAt(0) || "?"}
+            </span>
+          )}
+        </div>
+        <div className="flex-1">
+          <p className="text-muted-foreground">O que você está lendo?</p>
+        </div>
+        <Button size="sm" className="rounded-full px-4">
+          <Feather className="w-4 h-4 mr-2" />
+          Postar
+        </Button>
+      </div>
+
+      {/* Posts feed */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-64" />
+        <div className="divide-y">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="p-4 space-y-3">
+              <div className="flex gap-3">
+                <Skeleton className="w-12 h-12 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+              <Skeleton className="h-20 w-full" />
+              <div className="flex gap-8">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+            </div>
           ))}
         </div>
       ) : posts.length === 0 ? (
-        <EmptyState
-          icon={<Users className="w-16 h-16" />}
-          title="Nenhum post ainda"
-          description="Seja o primeiro a compartilhar algo com a comunidade!"
-          action={
-            <Button onClick={() => setShowCreateModal(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Criar primeiro post
-            </Button>
-          }
-        />
+        <div className="py-16">
+          <EmptyState
+            icon={<Users className="w-16 h-16" />}
+            title="Nenhum post ainda"
+            description="Seja o primeiro a compartilhar algo com a comunidade!"
+            action={
+              <Button onClick={() => setShowCreateModal(true)} className="rounded-full">
+                <Plus className="w-4 h-4 mr-2" />
+                Criar primeiro post
+              </Button>
+            }
+          />
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="divide-y">
           {posts.map((post) => (
             <PostCard
               key={post.id}
@@ -130,4 +166,3 @@ export default function ComunidadePage() {
     </div>
   );
 }
-

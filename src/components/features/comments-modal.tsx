@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { useToast } from "@/components/ui/toast";
-import { Modal, Button, Input, Skeleton, EmptyState } from "@/components/ui";
-import { formatDate } from "@/lib/utils";
+import { Modal, Button, Skeleton, EmptyState } from "@/components/ui";
 import type { PostComment, UserProfile } from "@/types/database";
-import { Send, User, MessageCircle, Trash2 } from "lucide-react";
+import { Send, MessageCircle, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CommentsModalProps {
   isOpen: boolean;
@@ -19,8 +19,28 @@ interface CommentWithProfile extends PostComment {
   user_profile?: UserProfile;
 }
 
+// Format relative time
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return `${diffInSeconds}s`;
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+  
+  return date.toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
+}
+
+// Get initials
+function getInitials(name: string | null | undefined): string {
+  if (!name) return "?";
+  return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+}
+
 export function CommentsModal({ isOpen, onClose, postId }: CommentsModalProps) {
-  const { user } = useUser();
+  const { user, profile } = useUser();
   const supabase = createClient();
   const { showToast } = useToast();
 
@@ -42,7 +62,7 @@ export function CommentsModal({ isOpen, onClose, postId }: CommentsModalProps) {
         .from("post_comments")
         .select(`
           *,
-          user_profile:users_profile(id, full_name, avatar_url)
+          user_profile:users_profile(id, full_name, avatar_url, email)
         `)
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
@@ -103,88 +123,122 @@ export function CommentsModal({ isOpen, onClose, postId }: CommentsModalProps) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Comentários" className="max-w-lg">
-      <div className="space-y-4">
+      <div className="space-y-0">
         {/* Comments list */}
-        <div className="max-h-[400px] overflow-y-auto space-y-4">
+        <div className="max-h-[400px] overflow-y-auto -mx-5 px-5">
           {isLoading ? (
-            <>
-              <Skeleton className="h-20" />
-              <Skeleton className="h-20" />
-              <Skeleton className="h-20" />
-            </>
+            <div className="space-y-4 py-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-3">
+                  <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : comments.length === 0 ? (
-            <EmptyState
-              icon={<MessageCircle className="w-12 h-12" />}
-              title="Nenhum comentário"
-              description="Seja o primeiro a comentar!"
-            />
+            <div className="py-8">
+              <EmptyState
+                icon={<MessageCircle className="w-10 h-10" />}
+                title="Nenhum comentário"
+                description="Seja o primeiro a comentar!"
+              />
+            </div>
           ) : (
-            comments.map((comment) => (
-              <div
-                key={comment.id}
-                className="p-3 rounded-lg bg-muted/50 space-y-2"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                      {comment.user_profile?.avatar_url ? (
-                        <img
-                          src={comment.user_profile.avatar_url}
-                          alt=""
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-4 h-4 text-primary" />
-                      )}
+            <div className="divide-y">
+              {comments.map((comment) => (
+                <div key={comment.id} className="py-3 group">
+                  <div className="flex gap-3">
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center overflow-hidden">
+                        {comment.user_profile?.avatar_url ? (
+                          <img
+                            src={comment.user_profile.avatar_url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs font-semibold text-primary">
+                            {getInitials(comment.user_profile?.full_name)}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {comment.user_profile?.full_name || "Usuário"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(comment.created_at)}
-                      </p>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-sm">
+                          {comment.user_profile?.full_name || "Usuário"}
+                        </span>
+                        <span className="text-muted-foreground text-sm">·</span>
+                        <span className="text-muted-foreground text-sm">
+                          {formatRelativeTime(comment.created_at)}
+                        </span>
+                        
+                        {user?.id === comment.user_id && (
+                          <button
+                            onClick={() => handleDelete(comment.id)}
+                            className="ml-auto opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[15px] mt-0.5">{comment.content}</p>
                     </div>
                   </div>
-
-                  {user?.id === comment.user_id && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(comment.id)}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
                 </div>
-
-                <p className="text-sm">{comment.content}</p>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
 
         {/* New comment input */}
-        <div className="flex gap-2 pt-4 border-t">
-          <Input
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Escreva um comentário..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit();
-              }
-            }}
-          />
-          <Button onClick={handleSubmit} isLoading={isSending} disabled={!newComment.trim()}>
-            <Send className="w-4 h-4" />
-          </Button>
+        <div className="flex items-start gap-3 pt-4 border-t mt-4">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center overflow-hidden">
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xs font-semibold text-primary">
+                  {getInitials(profile?.full_name)}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex-1 flex gap-2">
+            <input
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Escreva um comentário..."
+              className="flex-1 bg-transparent border-0 outline-none text-[15px] placeholder:text-muted-foreground"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+            />
+            <Button 
+              onClick={handleSubmit} 
+              isLoading={isSending} 
+              disabled={!newComment.trim()}
+              size="sm"
+              className="rounded-full px-4"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </Modal>
   );
 }
-
-
