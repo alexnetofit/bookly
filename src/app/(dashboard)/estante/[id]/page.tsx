@@ -20,8 +20,8 @@ import {
   Modal,
   Input,
 } from "@/components/ui";
-import type { Book, ReadingStatus } from "@/types/database";
-import { ArrowLeft, Edit, Trash2, Calendar, BookOpen, FileText } from "lucide-react";
+import type { Book, ReadingStatus, BookFormat } from "@/types/database";
+import { ArrowLeft, Edit, Trash2, Calendar, BookOpen, FileText, BookMarked, Headphones, Smartphone } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 const statusConfig: Record<ReadingStatus, { label: string; variant: "reading" | "read" | "not-started" | "abandoned" }> = {
@@ -29,6 +29,12 @@ const statusConfig: Record<ReadingStatus, { label: string; variant: "reading" | 
   lido: { label: "Lido", variant: "read" },
   nao_comecou: { label: "Não comecei", variant: "not-started" },
   desistido: { label: "Desisti", variant: "abandoned" },
+};
+
+const formatConfig: Record<BookFormat, { label: string; icon: typeof BookMarked }> = {
+  fisico: { label: "Livro Físico", icon: BookMarked },
+  ebook: { label: "Ebook", icon: Smartphone },
+  audiobook: { label: "Audiobook", icon: Headphones },
 };
 
 export default function BookDetailPage() {
@@ -224,6 +230,42 @@ export default function BookDetailPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="grid grid-cols-2 gap-4 text-sm">
+              {/* Formato */}
+              {book.formato && (
+                <>
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const FormatIcon = formatConfig[book.formato]?.icon || BookMarked;
+                      return <FormatIcon className="w-4 h-4 text-muted-foreground" />;
+                    })()}
+                    <span className="text-muted-foreground">Formato:</span>
+                  </div>
+                  <span>{formatConfig[book.formato]?.label || "Livro Físico"}</span>
+                </>
+              )}
+
+              {/* Data de início */}
+              {book.data_inicio && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Iniciado em:</span>
+                  </div>
+                  <span>{formatDate(book.data_inicio)}</span>
+                </>
+              )}
+
+              {/* Data de término */}
+              {book.data_termino && book.status_leitura === "lido" && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Finalizado em:</span>
+                  </div>
+                  <span>{formatDate(book.data_termino)}</span>
+                </>
+              )}
+
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Adicionado em:</span>

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
 import { Button, Input, Textarea, Select, StarRating } from "@/components/ui";
 import { BookSearch } from "./book-search";
-import type { Book, ReadingStatus, BookSearchResult } from "@/types/database";
+import type { Book, ReadingStatus, BookSearchResult, BookFormat } from "@/types/database";
 import { Save, ArrowLeft, Search, PenLine, Users, AlertTriangle, Upload, X, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,12 @@ const statusOptions = [
   { value: "lendo", label: "Lendo" },
   { value: "lido", label: "Lido" },
   { value: "desistido", label: "Desisti" },
+];
+
+const formatOptions = [
+  { value: "fisico", label: "Livro Físico" },
+  { value: "ebook", label: "Ebook" },
+  { value: "audiobook", label: "Audiobook" },
 ];
 
 type InputMode = "search" | "manual";
@@ -41,6 +47,9 @@ export function BookForm({ book, mode }: BookFormProps) {
     rating: book?.rating || 0,
     status_leitura: book?.status_leitura || "nao_comecou",
     paginas_lidas: book?.paginas_lidas?.toString() || "0",
+    formato: book?.formato || "fisico",
+    data_inicio: book?.data_inicio || "",
+    data_termino: book?.data_termino || "",
   });
 
   // Estado para capa do livro
@@ -124,6 +133,9 @@ export function BookForm({ book, mode }: BookFormProps) {
         rating: formData.rating || null,
         status_leitura: statusLeitura,
         paginas_lidas: paginasLidas,
+        formato: formData.formato as BookFormat,
+        data_inicio: formData.data_inicio || null,
+        data_termino: statusLeitura === "lido" && formData.data_termino ? formData.data_termino : null,
       };
 
       if (mode === "create") {
@@ -434,16 +446,58 @@ export function BookForm({ book, mode }: BookFormProps) {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="status_leitura" className="text-sm font-medium">
-            Status de leitura
-          </label>
-          <Select
-            id="status_leitura"
-            value={formData.status_leitura}
-            onChange={(e) => handleChange("status_leitura", e.target.value)}
-            options={statusOptions}
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label htmlFor="formato" className="text-sm font-medium">
+              Formato
+            </label>
+            <Select
+              id="formato"
+              value={formData.formato}
+              onChange={(e) => handleChange("formato", e.target.value)}
+              options={formatOptions}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="status_leitura" className="text-sm font-medium">
+              Status de leitura
+            </label>
+            <Select
+              id="status_leitura"
+              value={formData.status_leitura}
+              onChange={(e) => handleChange("status_leitura", e.target.value)}
+              options={statusOptions}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label htmlFor="data_inicio" className="text-sm font-medium">
+              Data de início
+            </label>
+            <Input
+              id="data_inicio"
+              type="date"
+              value={formData.data_inicio}
+              onChange={(e) => handleChange("data_inicio", e.target.value)}
+            />
+          </div>
+
+          {formData.status_leitura === "lido" && (
+            <div className="space-y-2">
+              <label htmlFor="data_termino" className="text-sm font-medium">
+                Data de término
+              </label>
+              <Input
+                id="data_termino"
+                type="date"
+                value={formData.data_termino}
+                onChange={(e) => handleChange("data_termino", e.target.value)}
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">

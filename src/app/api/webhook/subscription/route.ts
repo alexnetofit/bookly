@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       // Send password reset email so user can set their own password
       const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(
         emailLower,
-        { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.babelapp.com.br'}/redefinir-senha` }
+        { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.babelbookshelf.com'}/redefinir-senha` }
       );
 
       if (resetError) {

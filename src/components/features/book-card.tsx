@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, Badge, Progress, StarRating, Button, Modal } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import type { Book, ReadingStatus } from "@/types/database";
-import { Edit, Trash2, BookOpen } from "lucide-react";
+import type { Book, ReadingStatus, BookFormat } from "@/types/database";
+import { Edit, Trash2, BookOpen, BookMarked, Headphones, Smartphone } from "lucide-react";
 
 interface BookCardProps {
   book: Book;
@@ -19,6 +19,12 @@ const statusConfig: Record<ReadingStatus, { label: string; variant: "reading" | 
   lido: { label: "Lido", variant: "read" },
   nao_comecou: { label: "Não comecei", variant: "not-started" },
   desistido: { label: "Desisti", variant: "abandoned" },
+};
+
+const formatConfig: Record<BookFormat, { label: string; icon: typeof BookMarked }> = {
+  fisico: { label: "Físico", icon: BookMarked },
+  ebook: { label: "Ebook", icon: Smartphone },
+  audiobook: { label: "Audio", icon: Headphones },
 };
 
 export const BookCard = memo(function BookCard({ book, onDelete }: BookCardProps) {
@@ -73,7 +79,20 @@ export const BookCard = memo(function BookCard({ book, onDelete }: BookCardProps
                 <h3 className="font-semibold text-sm leading-snug line-clamp-3" title={book.nome_do_livro}>
                   {book.nome_do_livro}
                 </h3>
-                <Badge variant={status.variant} className="flex-shrink-0 ml-1">{status.label}</Badge>
+                <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+                  {book.formato && (
+                    (() => {
+                      const FormatIcon = formatConfig[book.formato]?.icon || BookMarked;
+                      return (
+                        <FormatIcon 
+                          className="w-3.5 h-3.5 text-muted-foreground" 
+                          title={formatConfig[book.formato]?.label || "Físico"} 
+                        />
+                      );
+                    })()
+                  )}
+                  <Badge variant={status.variant}>{status.label}</Badge>
+                </div>
               </div>
               <p className="text-sm text-muted-foreground truncate" title={book.autor}>
                 {book.autor}

@@ -1,5 +1,7 @@
 export type ReadingStatus = "nao_comecou" | "lendo" | "lido" | "desistido";
 
+export type BookFormat = "fisico" | "ebook" | "audiobook";
+
 export type PlanType = "mensal" | "trimestral" | "semestral" | "anual" | "explorer" | "traveler" | "devourer" | null;
 
 export interface BookSearchResult {
@@ -44,6 +46,9 @@ export interface Book {
   rating: number | null;
   status_leitura: ReadingStatus;
   paginas_lidas: number;
+  formato: BookFormat;
+  data_inicio: string | null;
+  data_termino: string | null;
   created_at: string;
   updated_at: string;
 }
