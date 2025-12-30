@@ -16,10 +16,10 @@ interface BookFormProps {
 }
 
 const statusOptions = [
-  { value: "nao_comecou", label: "Não comecei" },
+  { value: "nao_comecou", label: "Quero ler" },
   { value: "lendo", label: "Lendo" },
   { value: "lido", label: "Lido" },
-  { value: "desistido", label: "Desisti" },
+  { value: "desistido", label: "Abandonei" },
 ];
 
 const formatOptions = [

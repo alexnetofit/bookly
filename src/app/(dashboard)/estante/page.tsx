@@ -14,10 +14,10 @@ import { Plus, Search, Library, Filter } from "lucide-react";
 
 const statusOptions = [
   { value: "", label: "Todos os status" },
-  { value: "nao_comecou", label: "Não comecei" },
+  { value: "nao_comecou", label: "Quero ler" },
   { value: "lendo", label: "Lendo" },
   { value: "lido", label: "Lido" },
-  { value: "desistido", label: "Desisti" },
+  { value: "desistido", label: "Abandonei" },
 ];
 
 const ratingOptions = [

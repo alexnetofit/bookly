@@ -185,14 +185,14 @@ export default function DashboardPage() {
         />
         <StatCard
           icon={<Clock className="w-5 h-5" />}
-          label="Não começados"
+          label="Quero ler"
           value={stats?.nao_comecou || 0}
           color="text-gray-500"
           bgColor="bg-gray-500/10"
         />
         <StatCard
           icon={<BookX className="w-5 h-5" />}
-          label="Desistidos"
+          label="Abandonados"
           value={stats?.desistido || 0}
           color="text-red-500"
           bgColor="bg-red-500/10"

@@ -17,8 +17,8 @@ interface BookCardProps {
 const statusConfig: Record<ReadingStatus, { label: string; variant: "reading" | "read" | "not-started" | "abandoned" }> = {
   lendo: { label: "Lendo", variant: "reading" },
   lido: { label: "Lido", variant: "read" },
-  nao_comecou: { label: "Não comecei", variant: "not-started" },
-  desistido: { label: "Desisti", variant: "abandoned" },
+  nao_comecou: { label: "Quero ler", variant: "not-started" },
+  desistido: { label: "Abandonei", variant: "abandoned" },
 };
 
 const formatConfig: Record<BookFormat, { label: string; icon: typeof BookMarked }> = {
