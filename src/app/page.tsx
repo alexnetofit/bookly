@@ -148,7 +148,7 @@ function HeroSection() {
         </div>
         
         {/* Hero Image/Mockup */}
-        <div className="mt-16 md:mt-20 max-w-4xl mx-auto px-4">
+        <div className="mt-16 md:mt-20 max-w-5xl mx-auto">
           <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-[#2C2825]/15 ring-1 ring-[#2C2825]/5">
             <div className="absolute inset-0 bg-gradient-to-t from-[#2C2825]/5 to-transparent pointer-events-none z-10" />
             <Image
