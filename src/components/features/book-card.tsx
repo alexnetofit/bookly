@@ -84,10 +84,9 @@ export const BookCard = memo(function BookCard({ book, onDelete }: BookCardProps
                     (() => {
                       const FormatIcon = formatConfig[book.formato]?.icon || BookMarked;
                       return (
-                        <FormatIcon 
-                          className="w-3.5 h-3.5 text-muted-foreground" 
-                          title={formatConfig[book.formato]?.label || "Físico"} 
-                        />
+                        <span title={formatConfig[book.formato]?.label || "Físico"}>
+                          <FormatIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                        </span>
                       );
                     })()
                   )}
