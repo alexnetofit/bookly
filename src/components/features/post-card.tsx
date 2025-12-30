@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { useToast } from "@/components/ui/toast";
@@ -44,7 +44,7 @@ function formatRelativeTime(dateString: string): string {
   return date.toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
 }
 
-export function PostCard({ post, onDelete, onOpenComments, onUpdate }: PostCardProps) {
+export const PostCard = memo(function PostCard({ post, onDelete, onOpenComments, onUpdate }: PostCardProps) {
   const { user } = useUser();
   const supabase = createClient();
   const { showToast } = useToast();
@@ -429,4 +429,4 @@ export function PostCard({ post, onDelete, onOpenComments, onUpdate }: PostCardP
       </Modal>
     </>
   );
-}
+});

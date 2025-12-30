@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Button, Input, Card, CardContent } from "@/components/ui";
 import { Lock, Eye, EyeOff, CheckCircle, ArrowLeft } from "lucide-react";
@@ -166,10 +167,14 @@ function RedefinirSenhaContent() {
       <Card className="w-full max-w-md">
         <CardContent className="pt-8 pb-8">
           <div className="text-center mb-8">
-            <img
+            <Image
               src="/logo_cinza.png"
               alt="Babel"
+              width={100}
+              height={48}
               className="h-12 mx-auto mb-4 logo-themed"
+              priority
+              style={{ height: 48, width: 'auto' }}
             />
             <h1 className="text-2xl font-bold">Criar nova senha</h1>
             <p className="text-muted-foreground mt-2">

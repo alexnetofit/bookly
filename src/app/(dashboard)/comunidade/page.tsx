@@ -1,16 +1,26 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 
-export const dynamic = "force-dynamic";
+export const dynamicConfig = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { PostCard } from "@/components/features/post-card";
-import { CreatePostModal } from "@/components/features/create-post-modal";
-import { CommentsModal } from "@/components/features/comments-modal";
 import { Button, Skeleton, EmptyState } from "@/components/ui";
 import type { CommunityPost, UserProfile } from "@/types/database";
 import { Plus, Users, RefreshCw, Feather } from "lucide-react";
+
+// Lazy load modals for better performance
+const CreatePostModal = dynamic(
+  () => import("@/components/features/create-post-modal").then(mod => ({ default: mod.CreatePostModal })),
+  { ssr: false }
+);
+
+const CommentsModal = dynamic(
+  () => import("@/components/features/comments-modal").then(mod => ({ default: mod.CommentsModal })),
+  { ssr: false }
+);
 
 interface PostWithRelations extends CommunityPost {
   user_profile?: UserProfile;

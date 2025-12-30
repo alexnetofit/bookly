@@ -1,7 +1,25 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Minificação mais rápida com SWC
+  swcMinify: true,
+  
+  // Remover console.logs em produção
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+  
+  // Otimizações experimentais
+  experimental: {
+    optimizeCss: true,
+  },
+  
   images: {
+    // Formatos modernos de imagem
+    formats: ["image/avif", "image/webp"],
+    // Tamanhos de dispositivo otimizados
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
     remotePatterns: [
       {
         protocol: "https",

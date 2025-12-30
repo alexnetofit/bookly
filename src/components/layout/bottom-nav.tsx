@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ import {
   Gift,
 } from "lucide-react";
 
-export function BottomNav() {
+export const BottomNav = memo(function BottomNav() {
   const pathname = usePathname();
   const { profile } = useUser();
 
@@ -90,4 +91,4 @@ export function BottomNav() {
       </div>
     </nav>
   );
-}
+});

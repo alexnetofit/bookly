@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
@@ -21,7 +21,7 @@ const statusConfig: Record<ReadingStatus, { label: string; variant: "reading" | 
   desistido: { label: "Desisti", variant: "abandoned" },
 };
 
-export function BookCard({ book, onDelete }: BookCardProps) {
+export const BookCard = memo(function BookCard({ book, onDelete }: BookCardProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const supabase = createClient();
@@ -164,6 +164,4 @@ export function BookCard({ book, onDelete }: BookCardProps) {
       </Modal>
     </>
   );
-}
-
-
+});

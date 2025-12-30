@@ -1,6 +1,8 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks";
@@ -49,7 +51,7 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
-export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+export const Sidebar = memo(function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { profile } = useUser();
 
@@ -68,11 +70,14 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           className="flex items-center hover:opacity-80 transition-opacity"
           prefetch={true}
         >
-          <img
+          <Image
             src="/logo_cinza.png"
             alt="Babel"
-            style={{ width: isCollapsed ? 32 : 100, height: 'auto' }}
+            width={isCollapsed ? 32 : 100}
+            height={isCollapsed ? 32 : 100}
             className="logo-themed"
+            priority
+            style={{ width: isCollapsed ? 32 : 100, height: 'auto' }}
           />
         </Link>
         <button
@@ -172,4 +177,4 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       </div>
     </aside>
   );
-}
+});
