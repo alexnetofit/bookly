@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
 import { Button, Input, Textarea, Select, StarRating } from "@/components/ui";
 import { BookSearch } from "./book-search";
 import type { Book, ReadingStatus, BookSearchResult } from "@/types/database";
-import { Save, ArrowLeft, Search, PenLine, Users, AlertTriangle } from "lucide-react";
+import { Save, ArrowLeft, Search, PenLine, Users, AlertTriangle, Upload, X, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BookFormProps {
@@ -47,6 +47,10 @@ export function BookForm({ book, mode }: BookFormProps) {
   const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(
     book?.cover_url || null
   );
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(book?.cover_url || null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   // Estados para postagem na comunidade
   const [postToCommunity, setPostToCommunity] = useState(false);
@@ -92,6 +96,16 @@ export function BookForm({ book, mode }: BookFormProps) {
     setIsLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        showToast("Você precisa estar logado", "error");
+        return;
+      }
+
+      // Fazer upload da capa se houver arquivo
+      const coverUrl = await uploadCover(user.id);
+
       const numeroDePaginas = parseInt(formData.numero_de_paginas);
       const paginasLidas = parseInt(formData.paginas_lidas) || 0;
 
@@ -106,20 +120,13 @@ export function BookForm({ book, mode }: BookFormProps) {
         autor: formData.autor.trim(),
         numero_de_paginas: numeroDePaginas,
         descricao: formData.descricao.trim() || null,
-        cover_url: selectedCoverUrl,
+        cover_url: coverUrl,
         rating: formData.rating || null,
         status_leitura: statusLeitura,
         paginas_lidas: paginasLidas,
       };
 
       if (mode === "create") {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          showToast("Você precisa estar logado", "error");
-          return;
-        }
-
         // Inserir livro e pegar o ID retornado
         const { data: insertedBook, error } = await supabase
           .from("books")
@@ -183,18 +190,82 @@ export function BookForm({ book, mode }: BookFormProps) {
     }
   };
 
-  const handleBookSelect = (book: BookSearchResult) => {
+  const handleBookSelect = (selectedBook: BookSearchResult) => {
     setFormData((prev) => ({
       ...prev,
-      nome_do_livro: book.title,
-      autor: book.authors.join(", ") || "",
-      numero_de_paginas: book.page_count?.toString() || prev.numero_de_paginas,
+      nome_do_livro: selectedBook.title,
+      autor: selectedBook.authors.join(", ") || "",
+      numero_de_paginas: selectedBook.page_count?.toString() || prev.numero_de_paginas,
       // NÃO preencher descrição/comentários automaticamente
     }));
-    // Salvar capa do livro
-    setSelectedCoverUrl(book.cover_url);
+    // Salvar capa do livro da busca
+    setSelectedCoverUrl(selectedBook.cover_url);
+    setCoverPreview(selectedBook.cover_url);
+    setCoverFile(null); // Limpa arquivo se havia upload manual
     // Limpa erros após preencher
     setErrors({});
+  };
+
+  const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith("image/")) {
+      showToast("Por favor, selecione uma imagem", "error");
+      return;
+    }
+
+    // Validar tamanho (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("A imagem deve ter no máximo 2MB", "error");
+      return;
+    }
+
+    setCoverFile(file);
+    // Criar preview local
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCoverPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadCover = async (userId: string): Promise<string | null> => {
+    if (!coverFile) return selectedCoverUrl;
+
+    setIsUploadingCover(true);
+    try {
+      const fileExt = coverFile.name.split(".").pop();
+      const fileName = `${userId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("book-covers")
+        .upload(fileName, coverFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("book-covers")
+        .getPublicUrl(fileName);
+
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error("Erro ao fazer upload da capa:", error);
+      showToast("Erro ao fazer upload da capa", "error");
+      return selectedCoverUrl;
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
+  const handleRemoveCover = () => {
+    setSelectedCoverUrl(null);
+    setCoverFile(null);
+    setCoverPreview(null);
+    if (coverInputRef.current) {
+      coverInputRef.current.value = "";
+    }
   };
 
   return (
@@ -213,40 +284,38 @@ export function BookForm({ book, mode }: BookFormProps) {
         </h1>
       </div>
 
-      {/* Tabs para modo de entrada - apenas no modo criar */}
-      {mode === "create" && (
-        <div className="flex gap-2 p-1 bg-muted rounded-lg">
-          <button
-            type="button"
-            onClick={() => setInputMode("search")}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors",
-              inputMode === "search"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Search className="w-4 h-4" />
-            Buscar livro
-          </button>
-          <button
-            type="button"
-            onClick={() => setInputMode("manual")}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors",
-              inputMode === "manual"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <PenLine className="w-4 h-4" />
-            Preencher manualmente
-          </button>
-        </div>
-      )}
+      {/* Tabs para modo de entrada */}
+      <div className="flex gap-2 p-1 bg-muted rounded-lg">
+        <button
+          type="button"
+          onClick={() => setInputMode("search")}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors",
+            inputMode === "search"
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Search className="w-4 h-4" />
+          Buscar livro
+        </button>
+        <button
+          type="button"
+          onClick={() => setInputMode("manual")}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors",
+            inputMode === "manual"
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <PenLine className="w-4 h-4" />
+          Preencher manualmente
+        </button>
+      </div>
 
       {/* Componente de busca */}
-      {mode === "create" && inputMode === "search" && (
+      {inputMode === "search" && (
         <div className="bg-card border rounded-lg p-4">
           <BookSearch onSelect={handleBookSelect} />
         </div>
@@ -278,6 +347,58 @@ export function BookForm({ book, mode }: BookFormProps) {
             placeholder="Ex: J.R.R. Tolkien"
             error={errors.autor}
           />
+        </div>
+
+        {/* Upload de capa */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Capa do livro</label>
+          <div className="flex items-start gap-4">
+            {/* Preview da capa */}
+            <div className="relative w-24 h-36 bg-muted rounded-lg border-2 border-dashed border-border flex items-center justify-center overflow-hidden flex-shrink-0">
+              {coverPreview ? (
+                <>
+                  <img
+                    src={coverPreview}
+                    alt="Capa do livro"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveCover}
+                    className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/80 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </>
+              ) : (
+                <ImageIcon className="w-8 h-8 text-muted-foreground" />
+              )}
+            </div>
+            
+            {/* Botão de upload */}
+            <div className="flex-1 space-y-2">
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleCoverSelect}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => coverInputRef.current?.click()}
+                disabled={isUploadingCover}
+                className="w-full"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {coverPreview ? "Trocar capa" : "Enviar capa"}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                JPG, PNG ou WebP. Máx 2MB.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
