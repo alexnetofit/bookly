@@ -401,6 +401,54 @@ CREATE POLICY "Anyone can read cache"
   USING (true);
 
 -- =============================================
+-- STORAGE BUCKETS
+-- =============================================
+
+-- Bucket para avatares de usuários
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Bucket para capas de livros
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('book-covers', 'book-covers', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Políticas para avatars
+CREATE POLICY "Avatar images are publicly accessible"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'avatars');
+
+CREATE POLICY "Users can upload their own avatar"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+CREATE POLICY "Users can update their own avatar"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+CREATE POLICY "Users can delete their own avatar"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- Políticas para book-covers
+CREATE POLICY "Book covers are publicly accessible"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'book-covers');
+
+CREATE POLICY "Users can upload their own book covers"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'book-covers' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+CREATE POLICY "Users can update their own book covers"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'book-covers' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+CREATE POLICY "Users can delete their own book covers"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'book-covers' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- =============================================
 -- FIM DO SCHEMA
 -- =============================================
 
