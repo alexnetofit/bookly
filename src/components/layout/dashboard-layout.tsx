@@ -6,6 +6,8 @@ import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { BottomNav } from "./bottom-nav";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/theme-provider";
+import { Sun, Moon } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +17,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
 
   // Load collapsed state from localStorage
   useEffect(() => {
@@ -54,14 +57,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         />
       </div>
 
-      {/* Mobile header - with logo */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-background/80 backdrop-blur-md border-b flex items-center justify-center px-4">
+      {/* Mobile header - with logo and theme toggle */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-background/80 backdrop-blur-md border-b flex items-center justify-between px-4">
+        <div className="w-10" /> {/* Spacer for centering */}
         <img
           src="/logo_cinza.png"
           alt="Babel"
           style={{ height: 32, width: 'auto' }}
           className="logo-themed"
         />
+        <button
+          onClick={toggleTheme}
+          className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-accent transition-colors"
+        >
+          {theme === "dark" ? (
+            <Sun className="w-5 h-5" />
+          ) : (
+            <Moon className="w-5 h-5" />
+          )}
+        </button>
       </header>
 
       {/* Main content */}
