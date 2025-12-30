@@ -43,6 +43,9 @@ export default function HomePage() {
       {/* Demo/Screenshots */}
       <DemoSection />
       
+      {/* Screenshots Gallery */}
+      <ScreenshotsGallery />
+      
       {/* Testimonials */}
       <TestimonialsSection />
       
@@ -147,16 +150,14 @@ function HeroSection() {
         {/* Hero Image/Mockup */}
         <div className="mt-16 md:mt-20 max-w-5xl mx-auto">
           <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-[#2C2825]/10 border border-[#E8E4DF]">
-            <div className="aspect-[16/9] bg-gradient-to-br from-[#F5F2EE] to-[#EBE7E2] flex items-center justify-center">
-              <div className="text-center p-8">
-                <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-6">
-                  {[1,2,3,4,5,6].map((i) => (
-                    <div key={i} className="aspect-[2/3] bg-[#E8E4DF] rounded-lg shadow-sm animate-pulse" />
-                  ))}
-                </div>
-                <p className="text-[#8B8178] text-sm">Sua estante virtual</p>
-              </div>
-            </div>
+            <Image
+              src="/screenshots/screenshot-estante.png"
+              alt="Estante virtual do Babel"
+              width={1920}
+              height={1080}
+              className="w-full h-auto"
+              priority
+            />
           </div>
         </div>
       </div>
@@ -380,37 +381,82 @@ function DemoSection() {
 
           {/* Mockup */}
           <div className="relative">
-            <div className="aspect-[4/3] bg-gradient-to-br from-[#F5F2EE] to-[#EBE7E2] rounded-2xl shadow-2xl shadow-[#2C2825]/10 border border-[#E8E4DF] overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="w-3 h-3 bg-red-400 rounded-full" />
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full" />
-                  <div className="w-3 h-3 bg-green-400 rounded-full" />
-                </div>
-                <div className="space-y-4">
-                  <div className="h-8 bg-[#E8E4DF] rounded-lg w-1/3" />
-                  <div className="grid grid-cols-4 gap-3">
-                    {[1,2,3,4,5,6,7,8].map((i) => (
-                      <div key={i} className="aspect-[2/3] bg-[#E8E4DF] rounded-lg" />
-                    ))}
-                  </div>
-                </div>
-              </div>
+            <div className="rounded-2xl shadow-2xl shadow-[#2C2825]/10 border border-[#E8E4DF] overflow-hidden">
+              <Image
+                src="/screenshots/screenshot-dashboard.png"
+                alt="Dashboard do Babel"
+                width={1920}
+                height={1080}
+                className="w-full h-auto"
+              />
             </div>
             {/* Floating elements */}
-            <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg p-4 border border-[#E8E4DF]">
+            <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg p-4 border border-[#E8E4DF] hidden md:block">
               <div className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-[#8B7355]" />
-                <span className="text-sm font-medium text-[#2C2825]">Meta: 24/30 livros</span>
+                <span className="text-sm font-medium text-[#2C2825]">Acompanhe suas metas</span>
               </div>
             </div>
-            <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg p-4 border border-[#E8E4DF]">
+            <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg p-4 border border-[#E8E4DF] hidden md:block">
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                <span className="text-sm font-medium text-[#2C2825]">4.9 avaliação</span>
+                <span className="text-sm font-medium text-[#2C2825]">Avalie seus livros</span>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ScreenshotsGallery() {
+  const screenshots = [
+    {
+      src: "/screenshots/screenshot-estante.png",
+      title: "Sua Estante Virtual",
+      description: "Organize todos os seus livros em um só lugar",
+    },
+    {
+      src: "/screenshots/screenshot-metas.png",
+      title: "Metas Anuais",
+      description: "Defina e acompanhe suas metas de leitura",
+    },
+    {
+      src: "/screenshots/screenshot-comunidade.png",
+      title: "Comunidade de Leitores",
+      description: "Conecte-se com outros apaixonados por livros",
+    },
+  ];
+
+  return (
+    <section className="py-20 md:py-28 bg-[#F5F2EE]">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-serif font-semibold text-[#2C2825] mb-4">
+            Conheça o Babel por dentro
+          </h2>
+          <p className="text-[#5C5652] max-w-xl mx-auto">
+            Uma interface limpa e intuitiva pensada para quem ama ler.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {screenshots.map((screenshot, index) => (
+            <div key={index} className="group">
+              <div className="rounded-2xl overflow-hidden shadow-lg border border-[#E8E4DF] mb-4 group-hover:shadow-xl transition-shadow">
+                <Image
+                  src={screenshot.src}
+                  alt={screenshot.title}
+                  width={800}
+                  height={600}
+                  className="w-full h-auto"
+                />
+              </div>
+              <h3 className="text-lg font-semibold text-[#2C2825] mb-1">{screenshot.title}</h3>
+              <p className="text-[#5C5652] text-sm">{screenshot.description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
