@@ -148,8 +148,9 @@ function HeroSection() {
         </div>
         
         {/* Hero Image/Mockup */}
-        <div className="mt-16 md:mt-20 max-w-5xl mx-auto">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-[#2C2825]/10 border border-[#E8E4DF]">
+        <div className="mt-16 md:mt-20 max-w-4xl mx-auto px-4">
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-[#2C2825]/15 ring-1 ring-[#2C2825]/5">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2C2825]/5 to-transparent pointer-events-none z-10" />
             <Image
               src="/screenshots/screenshot-estante.png"
               alt="Estante virtual do Babel"
@@ -381,7 +382,8 @@ function DemoSection() {
 
           {/* Mockup */}
           <div className="relative">
-            <div className="rounded-2xl shadow-2xl shadow-[#2C2825]/10 border border-[#E8E4DF] overflow-hidden">
+            <div className="rounded-2xl shadow-2xl shadow-[#2C2825]/15 ring-1 ring-[#2C2825]/5 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#2C2825]/5 to-transparent pointer-events-none z-10" />
               <Image
                 src="/screenshots/screenshot-dashboard.png"
                 alt="Dashboard do Babel"
@@ -391,13 +393,13 @@ function DemoSection() {
               />
             </div>
             {/* Floating elements */}
-            <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg p-4 border border-[#E8E4DF] hidden md:block">
+            <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg shadow-[#2C2825]/10 p-4 ring-1 ring-[#2C2825]/5 hidden md:block">
               <div className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-[#8B7355]" />
                 <span className="text-sm font-medium text-[#2C2825]">Acompanhe suas metas</span>
               </div>
             </div>
-            <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg p-4 border border-[#E8E4DF] hidden md:block">
+            <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg shadow-[#2C2825]/10 p-4 ring-1 ring-[#2C2825]/5 hidden md:block">
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                 <span className="text-sm font-medium text-[#2C2825]">Avalie seus livros</span>
@@ -444,13 +446,14 @@ function ScreenshotsGallery() {
         <div className="grid md:grid-cols-3 gap-8">
           {screenshots.map((screenshot, index) => (
             <div key={index} className="group">
-              <div className="rounded-2xl overflow-hidden shadow-lg border border-[#E8E4DF] mb-4 group-hover:shadow-xl transition-shadow">
+              <div className="relative rounded-2xl overflow-hidden shadow-xl shadow-[#2C2825]/10 ring-1 ring-[#2C2825]/5 mb-4 group-hover:shadow-2xl group-hover:ring-[#8B7355]/20 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2C2825]/5 to-transparent pointer-events-none z-10" />
                 <Image
                   src={screenshot.src}
                   alt={screenshot.title}
                   width={800}
                   height={600}
-                  className="w-full h-auto"
+                  className="w-full h-auto group-hover:scale-[1.02] transition-transform duration-300"
                 />
               </div>
               <h3 className="text-lg font-semibold text-[#2C2825] mb-1">{screenshot.title}</h3>
