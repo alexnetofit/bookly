@@ -48,6 +48,7 @@ export function BookForm({ book, mode }: BookFormProps) {
     status_leitura: book?.status_leitura || "nao_comecou",
     paginas_lidas: book?.paginas_lidas?.toString() || "0",
     formato: book?.formato || "fisico",
+    genero: book?.genero || "",
     data_inicio: book?.data_inicio || "",
     data_termino: book?.data_termino || "",
   });
@@ -134,6 +135,7 @@ export function BookForm({ book, mode }: BookFormProps) {
         status_leitura: statusLeitura,
         paginas_lidas: paginasLidas,
         formato: formData.formato as BookFormat,
+        genero: formData.genero.trim() || null,
         data_inicio: formData.data_inicio || null,
         data_termino: statusLeitura === "lido" && formData.data_termino ? formData.data_termino : null,
       };
@@ -208,6 +210,7 @@ export function BookForm({ book, mode }: BookFormProps) {
       nome_do_livro: selectedBook.title,
       autor: selectedBook.authors.join(", ") || "",
       numero_de_paginas: selectedBook.page_count?.toString() || prev.numero_de_paginas,
+      genero: selectedBook.genre || prev.genero,
       // NÃO preencher descrição/comentários automaticamente
     }));
     // Salvar capa do livro da busca
@@ -358,6 +361,18 @@ export function BookForm({ book, mode }: BookFormProps) {
             onChange={(e) => handleChange("autor", e.target.value)}
             placeholder="Ex: J.R.R. Tolkien"
             error={errors.autor}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="genero" className="text-sm font-medium">
+            Gênero
+          </label>
+          <Input
+            id="genero"
+            value={formData.genero}
+            onChange={(e) => handleChange("genero", e.target.value)}
+            placeholder="Ex: Ficção, Romance, Fantasia..."
           />
         </div>
 

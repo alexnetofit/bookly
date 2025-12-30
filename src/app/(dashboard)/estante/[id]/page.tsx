@@ -244,6 +244,17 @@ export default function BookDetailPage() {
                 </>
               )}
 
+              {/* Gênero */}
+              {book.genero && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Gênero:</span>
+                  </div>
+                  <span>{book.genero}</span>
+                </>
+              )}
+
               {/* Data de início */}
               {book.data_inicio && (
                 <>

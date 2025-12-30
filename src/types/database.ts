@@ -12,6 +12,7 @@ export interface BookSearchResult {
   page_count: number | null;
   published_year: string | null;
   description: string | null;
+  genre: string | null;
   source: "google" | "openlibrary";
 }
 
@@ -47,6 +48,7 @@ export interface Book {
   status_leitura: ReadingStatus;
   paginas_lidas: number;
   formato: BookFormat;
+  genero: string | null;
   data_inicio: string | null;
   data_termino: string | null;
   created_at: string;
