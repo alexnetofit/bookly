@@ -104,6 +104,8 @@ export default function LoginPage() {
                 </label>
                 <Link 
                   href="/esqueci-senha" 
+                  prefetch={true}
+                  onClick={(e) => e.stopPropagation()}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Esqueci minha senha
