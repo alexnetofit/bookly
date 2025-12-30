@@ -102,14 +102,13 @@ export default function LoginPage() {
                 <label htmlFor="password" className="text-sm font-medium">
                   Senha
                 </label>
-                <Link 
-                  href="/esqueci-senha" 
-                  prefetch={true}
-                  onClick={(e) => e.stopPropagation()}
+                <button
+                  type="button"
+                  onClick={() => router.push("/esqueci-senha")}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Esqueci minha senha
-                </Link>
+                </button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
