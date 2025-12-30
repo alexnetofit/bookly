@@ -10,7 +10,7 @@ export default function HomePage() {
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
             <BookOpen className="w-5 h-5 text-primary" />
           </div>
-          <span className="text-xl font-bold">Bookly</span>
+          <span className="text-xl font-bold">Babel</span>
         </div>
         <div className="flex items-center gap-4">
           <Link
@@ -122,7 +122,7 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-primary" />
-            <span>Bookly © {new Date().getFullYear()}</span>
+            <span>Babel © {new Date().getFullYear()}</span>
           </div>
           <p>Feito com ❤️ para amantes de livros</p>
         </div>

@@ -1,5 +1,5 @@
 -- =============================================
--- BOOKLY DATABASE SCHEMA
+-- BABEL DATABASE SCHEMA
 -- =============================================
 -- Execute este arquivo no Supabase SQL Editor
 -- para criar todas as tabelas e políticas RLS

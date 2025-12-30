@@ -46,3 +46,4 @@ export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
   );
 }
 
+

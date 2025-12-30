@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     // Webhook secret validation temporarily disabled for testing
     // TODO: Re-enable after testing
     // const webhookSecret = request.headers.get("x-webhook-secret");
-    // const expectedSecret = process.env.WEBHOOK_SECRET || "bookly_webhook_secret_2024";
+    // const expectedSecret = process.env.WEBHOOK_SECRET || "babel_webhook_secret_2024";
     // if (webhookSecret !== expectedSecret) {
     //   return NextResponse.json({ error: "Invalid webhook secret" }, { status: 401 });
     // }
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       // Send password reset email so user can set their own password
       const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(
         emailLower,
-        { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.booklyoficial.com'}/redefinir-senha` }
+        { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.babelapp.com.br'}/redefinir-senha` }
       );
 
       if (resetError) {

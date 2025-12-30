@@ -18,7 +18,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Load collapsed state from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("bookly-sidebar-collapsed");
+    const saved = localStorage.getItem("babel-sidebar-collapsed");
     if (saved !== null) {
       setIsCollapsed(JSON.parse(saved));
     }
@@ -26,7 +26,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Save collapsed state
   useEffect(() => {
-    localStorage.setItem("bookly-sidebar-collapsed", JSON.stringify(isCollapsed));
+    localStorage.setItem("babel-sidebar-collapsed", JSON.stringify(isCollapsed));
   }, [isCollapsed]);
 
   // Page transition effect

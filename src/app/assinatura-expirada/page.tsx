@@ -34,7 +34,7 @@ export default function AssinaturaExpiradaPage() {
           <div className="space-y-2">
             <h1 className="text-2xl font-bold">Assinatura Expirada</h1>
             <p className="text-muted-foreground">
-              Sua assinatura do Bookly expirou. Renove para continuar acessando todos os recursos.
+              Sua assinatura do Babel expirou. Renove para continuar acessando todos os recursos.
             </p>
           </div>
 
@@ -50,7 +50,7 @@ export default function AssinaturaExpiradaPage() {
 
           <div className="space-y-3">
             <a
-              href="mailto:contato@bookly.com"
+              href="mailto:contato@babelapp.com.br"
               className="w-full inline-flex items-center justify-center h-10 px-4 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
             >
               <Mail className="mr-2 h-4 w-4" />
