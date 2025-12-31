@@ -102,7 +102,14 @@ export default function EstantePage() {
       // Apply sorting
       const [field, order] = sortBy.split("_");
       const sortField = field === "created" ? "created_at" : field === "nome" ? "nome_do_livro" : field;
-      query = query.order(sortField, { ascending: order === "asc" || sortBy.endsWith("asc") });
+      const isAscending = order === "asc" || sortBy.endsWith("asc");
+      
+      // Para ordenação por rating descendente, colocar nulls no final
+      if (sortField === "rating" && !isAscending) {
+        query = query.order(sortField, { ascending: false, nullsFirst: false });
+      } else {
+        query = query.order(sortField, { ascending: isAscending });
+      }
 
       const { data, error } = await query;
 
