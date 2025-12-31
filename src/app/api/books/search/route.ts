@@ -19,7 +19,6 @@ function normalizeGoogleBook(item: any): BookSearchResult {
     page_count: volumeInfo.pageCount || null,
     published_year: volumeInfo.publishedDate?.split("-")[0] || null,
     description: volumeInfo.description?.slice(0, 500) || null,
-    genre: volumeInfo.categories?.[0] || null,
     source: "google",
   };
 }
@@ -37,7 +36,6 @@ function normalizeOpenLibraryBook(doc: any): BookSearchResult {
     page_count: doc.number_of_pages_median || null,
     published_year: doc.first_publish_year?.toString() || null,
     description: null, // Open Library search doesn't return descriptions
-    genre: doc.subject?.[0] || null,
     source: "openlibrary",
   };
 }

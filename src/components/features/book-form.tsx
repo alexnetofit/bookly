@@ -28,6 +28,36 @@ const formatOptions = [
   { value: "audiobook", label: "Audiobook" },
 ];
 
+const genreOptions = [
+  { value: "", label: "Selecione um gênero" },
+  { value: "Ficção", label: "Ficção" },
+  { value: "Não ficção", label: "Não ficção" },
+  { value: "Fantasia", label: "Fantasia" },
+  { value: "Ficção científica", label: "Ficção científica" },
+  { value: "Romance", label: "Romance" },
+  { value: "Romance de época", label: "Romance de época" },
+  { value: "Mistério & Suspense", label: "Mistério & Suspense" },
+  { value: "Terror / Horror", label: "Terror / Horror" },
+  { value: "Aventura", label: "Aventura" },
+  { value: "Drama", label: "Drama" },
+  { value: "Literatura Clássica", label: "Literatura Clássica" },
+  { value: "Young Adult (YA)", label: "Young Adult (YA)" },
+  { value: "Infantil", label: "Infantil" },
+  { value: "Poesia", label: "Poesia" },
+  { value: "Contos", label: "Contos" },
+  { value: "Graphic Novel / Quadrinhos", label: "Graphic Novel / Quadrinhos" },
+  { value: "Biografia / Autobiografia", label: "Biografia / Autobiografia" },
+  { value: "História", label: "História" },
+  { value: "Autoajuda & Desenvolvimento pessoal", label: "Autoajuda & Desenvolvimento pessoal" },
+  { value: "Religião & Espiritualidade", label: "Religião & Espiritualidade" },
+  { value: "Filosofia", label: "Filosofia" },
+  { value: "Psicologia", label: "Psicologia" },
+  { value: "Negócios & Economia", label: "Negócios & Economia" },
+  { value: "Educação & Estudos", label: "Educação & Estudos" },
+  { value: "Ensaios", label: "Ensaios" },
+  { value: "Crônica", label: "Crônica" },
+];
+
 type InputMode = "search" | "manual";
 
 export function BookForm({ book, mode }: BookFormProps) {
@@ -210,7 +240,7 @@ export function BookForm({ book, mode }: BookFormProps) {
       nome_do_livro: selectedBook.title,
       autor: selectedBook.authors.join(", ") || "",
       numero_de_paginas: selectedBook.page_count?.toString() || prev.numero_de_paginas,
-      genero: selectedBook.genre || prev.genero,
+      // NÃO preencher gênero automaticamente (usuário seleciona do dropdown)
       // NÃO preencher descrição/comentários automaticamente
     }));
     // Salvar capa do livro da busca
@@ -368,11 +398,11 @@ export function BookForm({ book, mode }: BookFormProps) {
           <label htmlFor="genero" className="text-sm font-medium">
             Gênero
           </label>
-          <Input
+          <Select
             id="genero"
             value={formData.genero}
             onChange={(e) => handleChange("genero", e.target.value)}
-            placeholder="Ex: Ficção, Romance, Fantasia..."
+            options={genreOptions}
           />
         </div>
 

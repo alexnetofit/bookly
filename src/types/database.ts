@@ -12,7 +12,6 @@ export interface BookSearchResult {
   page_count: number | null;
   published_year: string | null;
   description: string | null;
-  genre: string | null;
   source: "google" | "openlibrary";
 }
 
