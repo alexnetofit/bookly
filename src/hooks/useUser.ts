@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { UserProfile } from "@/types/database";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 
 interface UseUserReturn {
@@ -17,56 +17,41 @@ export function useUser(): UseUserReturn {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const supabaseRef = useRef(createClient());
+  const [supabase] = useState(() => createClient());
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabaseRef.current
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase
       .from("users_profile")
       .select("*")
       .eq("id", userId)
       .single();
-    
-    if (data) {
-      setProfile(data);
-    }
-    return data;
-  }, []);
+    setProfile(data);
+  };
 
-  const refetch = useCallback(async () => {
-    const { data: { user: currentUser } } = await supabaseRef.current.auth.getUser();
+  const refetch = async () => {
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
     if (currentUser) {
       setUser(currentUser);
       await fetchProfile(currentUser.id);
     }
-  }, [fetchProfile]);
+  };
 
   useEffect(() => {
-    const supabase = supabaseRef.current;
-
     // Get initial session
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          setUser(session.user);
-          await fetchProfile(session.user.id);
-        }
-      } catch (error) {
-        console.error("Error getting session:", error);
-      } finally {
-        setIsLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        fetchProfile(session.user.id);
       }
-    };
+      setIsLoading(false);
+    });
 
-    initAuth();
-
-    // Listen for auth changes
+    // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (session?.user) {
           setUser(session.user);
-          await fetchProfile(session.user.id);
+          fetchProfile(session.user.id);
         } else {
           setUser(null);
           setProfile(null);
@@ -76,7 +61,7 @@ export function useUser(): UseUserReturn {
     );
 
     return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+  }, [supabase]);
 
   const isSubscriptionActive = profile
     ? profile.is_admin ||
