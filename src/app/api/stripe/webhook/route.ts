@@ -118,11 +118,11 @@ export async function POST(request: Request) {
     if (existingUser && existingUser.length > 0) {
       const userId = existingUser[0].id;
       
-      // Atualizar pelo ID do usuário
+      // Atualizar pelo ID do usuário (null = plano grátis)
       const { error: updateError, data: updateData } = await supabaseAdmin
         .from("users_profile")
         .update({
-          plan: "free",
+          plan: null,
           subscription_expires_at: null,
           stripe_subscription_id: null,
         })
@@ -165,12 +165,12 @@ export async function POST(request: Request) {
 
     let updated = false;
 
-    // Primeiro tentar pela subscription_id
+    // Primeiro tentar pela subscription_id (null = plano grátis)
     if (subscriptionId) {
       const { error: updateError, data } = await supabaseAdmin
         .from("users_profile")
         .update({
-          plan: "free",
+          plan: null,
           subscription_expires_at: null,
           stripe_subscription_id: null,
         })
@@ -188,7 +188,7 @@ export async function POST(request: Request) {
       const { error: updateError, data } = await supabaseAdmin
         .from("users_profile")
         .update({
-          plan: "free",
+          plan: null,
           subscription_expires_at: null,
           stripe_subscription_id: null,
         })
