@@ -630,7 +630,7 @@ export function BookForm({ book, mode }: BookFormProps) {
             <StarRating
               value={formData.rating}
               onChange={(value) => handleChange("rating", value)}
-              size="lg"
+              size="xl"
             />
           </div>
         </div>
