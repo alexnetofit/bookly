@@ -143,7 +143,6 @@ export default function DashboardPage() {
         <div className="flex gap-2">
           <ShareDashboard 
             stats={stats ? {
-              total: stats.total_books,
               lido: stats.books_lido,
               lendo: stats.books_lendo,
               nao_comecou: stats.books_nao_comecou,
