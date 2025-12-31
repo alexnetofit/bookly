@@ -104,50 +104,55 @@ export async function POST(request: Request) {
     console.log(`Processing refund - customerId: ${customerId}, email: ${customerEmail}`);
 
     let updated = false;
+    let debugInfo: Record<string, unknown> = { customerId, customerEmail };
 
-    // Primeiro tentar pelo stripe_customer_id (mais confiável)
-    if (customerId) {
-      const { error: updateError, data } = await supabaseAdmin
+    // Primeiro buscar o usuário para ver se existe
+    const { data: existingUser } = await supabaseAdmin
+      .from("users_profile")
+      .select("id, email, stripe_customer_id, plan")
+      .or(`stripe_customer_id.eq.${customerId},email.eq.${customerEmail}`)
+      .limit(1);
+
+    debugInfo.existingUser = existingUser;
+
+    if (existingUser && existingUser.length > 0) {
+      const userId = existingUser[0].id;
+      
+      // Atualizar pelo ID do usuário
+      const { error: updateError, data: updateData } = await supabaseAdmin
         .from("users_profile")
         .update({
           plan: "free",
           subscription_expires_at: null,
           stripe_subscription_id: null,
         })
-        .eq("stripe_customer_id", customerId)
+        .eq("id", userId)
         .select();
 
-      if (!updateError && data && data.length > 0) {
-        console.log(`Plan reverted to free for customer: ${customerId}`);
-        updated = true;
-      } else {
-        console.log(`No user found with stripe_customer_id: ${customerId}`);
-      }
-    }
+      debugInfo.updateError = updateError;
+      debugInfo.updateData = updateData;
 
-    // Se não encontrou pelo customer_id, tentar pelo email
-    if (!updated && customerEmail) {
-      const { error: updateError, data } = await supabaseAdmin
-        .from("users_profile")
-        .update({
-          plan: "free",
-          subscription_expires_at: null,
-          stripe_subscription_id: null,
-        })
-        .eq("email", customerEmail)
-        .select();
-
-      if (!updateError && data && data.length > 0) {
-        console.log(`Plan reverted to free for email: ${customerEmail}`);
+      if (!updateError && updateData && updateData.length > 0) {
+        console.log(`Plan reverted to free for user: ${userId}`);
         updated = true;
-      } else {
-        console.log(`No user found with email: ${customerEmail}`);
       }
     }
 
     if (!updated) {
-      console.error(`Could not find user to revert plan. customerId: ${customerId}, email: ${customerEmail}`);
+      console.error(`Could not find/update user. Debug:`, debugInfo);
+      return NextResponse.json({ 
+        received: true, 
+        warning: "User not found or update failed",
+        debug: debugInfo 
+      });
     }
+
+    return NextResponse.json({ 
+      received: true, 
+      success: true,
+      message: "Plan reverted to free",
+      debug: debugInfo 
+    });
   }
 
   // Processar cancelamento de subscription
