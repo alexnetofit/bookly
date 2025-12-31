@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { BottomNav } from "./bottom-nav";
+import { InstallPWA } from "@/components/pwa";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useUser } from "@/hooks/useUser";
@@ -195,6 +196,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Bottom navigation - mobile only */}
       <BottomNav />
+
+      {/* PWA Install Banner */}
+      <InstallPWA />
     </div>
   );
 }

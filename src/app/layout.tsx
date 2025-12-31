@@ -28,6 +28,15 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Babel - Sua Biblioteca Pessoal",
   description: "Organize sua biblioteca pessoal, acompanhe suas leituras e conecte-se com outros leitores.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Babel",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -37,6 +46,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <meta name="theme-color" content="#8B7355" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Babel" />
+        <link rel="apple-touch-icon" href="/babel_icon.png" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
       >

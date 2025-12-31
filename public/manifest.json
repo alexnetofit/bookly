@@ -1,0 +1,28 @@
+{
+  "name": "Babel - Sua Biblioteca Pessoal",
+  "short_name": "Babel",
+  "description": "Organize sua biblioteca pessoal, acompanhe suas leituras e conecte-se com outros leitores.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#8B7355",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/babel_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/babel_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["books", "education", "lifestyle"],
+  "lang": "pt-BR",
+  "dir": "ltr"
+}
+
