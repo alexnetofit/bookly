@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,13 @@ import {
 export const BottomNav = memo(function BottomNav() {
   const pathname = usePathname();
   const { profile } = useUser();
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+    // Detect if running as PWA (standalone mode)
+    const standalone = window.matchMedia("(display-mode: standalone)").matches;
+    setIsStandalone(standalone);
+  }, []);
 
   const navItems = [
     {
@@ -57,7 +64,10 @@ export const BottomNav = memo(function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t md:hidden safe-area-bottom">
+    <nav className={cn(
+      "fixed bottom-0 left-0 right-0 z-50 bg-card border-t md:hidden",
+      isStandalone ? "pb-6" : "pb-0"
+    )}>
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
