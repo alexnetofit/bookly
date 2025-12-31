@@ -8,7 +8,7 @@ import { useUser } from "@/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton, EmptyState, Button, Modal } from "@/components/ui";
 import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp, MessageCircle, Tag } from "lucide-react";
 import Link from "next/link";
-import type { DashboardData, Book as BookType } from "@/types/database";
+import type { DashboardData, Book as BookType, CommunityPost } from "@/types/database";
 import { ShareDashboard } from "@/components/features/share-dashboard";
 import { getDashboardCache, setDashboardCache } from "@/lib/cache";
 
@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(!cachedData);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [modalBooks, setModalBooks] = useState<BookType[]>([]);
+  const [modalPosts, setModalPosts] = useState<CommunityPost[]>([]);
   const [isLoadingModal, setIsLoadingModal] = useState(false);
   
   const supabase = createClient();
@@ -92,6 +93,26 @@ export default function DashboardPage() {
     }
   }, [user]);
 
+  // Busca posts do usuário para o modal
+  const fetchPostsForModal = useCallback(async () => {
+    if (!user) return;
+    
+    setIsLoadingModal(true);
+    try {
+      const { data } = await supabase
+        .from("community_posts")
+        .select("*, books(nome_do_livro, autor, cover_url)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      
+      setModalPosts(data || []);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setIsLoadingModal(false);
+    }
+  }, [user]);
+
   const handleOpenModal = (type: ModalType) => {
     setActiveModal(type);
     
@@ -112,6 +133,9 @@ export default function DashboardPage() {
       case "autores":
       case "generos":
         fetchBooksForModal(null);
+        break;
+      case "posts":
+        fetchPostsForModal();
         break;
       default:
         break;
@@ -267,7 +291,7 @@ export default function DashboardPage() {
           value={stats?.total_posts || 0}
           color="text-cyan-500"
           bgColor="bg-cyan-500/10"
-          onClick={() => {}}
+          onClick={() => handleOpenModal("posts")}
         />
       </div>
 
@@ -298,6 +322,10 @@ export default function DashboardPage() {
 
       <Modal isOpen={activeModal === "generos"} onClose={() => setActiveModal(null)} title="Gêneros">
         {isLoadingModal ? <ModalSkeleton /> : <GenresList books={modalBooks} />}
+      </Modal>
+
+      <Modal isOpen={activeModal === "posts"} onClose={() => setActiveModal(null)} title="Meus Posts">
+        {isLoadingModal ? <ModalSkeleton /> : <PostsList posts={modalPosts} />}
       </Modal>
 
       {/* Author Ranking */}
@@ -516,6 +544,45 @@ function GenresList({ books }: { books: BookType[] }) {
           </span>
         </div>
       ))}
+    </div>
+  );
+}
+
+// Lista de posts do usuário
+function PostsList({ posts }: { posts: CommunityPost[] }) {
+  if (posts.length === 0) {
+    return <p className="text-muted-foreground text-center py-4">Nenhum post encontrado.</p>;
+  }
+
+  return (
+    <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+      {posts.map((post) => {
+        const book = post.books as { nome_do_livro: string; autor: string; cover_url: string | null } | null;
+        return (
+          <Link 
+            key={post.id} 
+            href={`/social?post=${post.id}`}
+            className="block p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+          >
+            <div className="flex gap-3">
+              {book?.cover_url ? (
+                <img src={book.cover_url} alt={book.nome_do_livro} className="w-10 h-14 object-cover rounded flex-shrink-0" />
+              ) : (
+                <div className="w-10 h-14 bg-muted rounded flex items-center justify-center flex-shrink-0">
+                  <Book className="w-5 h-5 text-muted-foreground" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{book?.nome_do_livro || "Livro"}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2">{post.content}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {new Date(post.created_at).toLocaleDateString("pt-BR")}
+                </p>
+              </div>
+            </div>
+          </Link>
+        );
+      })}
     </div>
   );
 }
