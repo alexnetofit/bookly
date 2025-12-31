@@ -2,9 +2,12 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-12-15.clover",
-});
+// Inicializar Stripe de forma lazy para evitar erro durante build
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-12-15.clover",
+  });
+}
 
 // Duração dos planos em meses
 const PLAN_DURATIONS: Record<string, number> = {
@@ -33,6 +36,7 @@ export async function POST(request: Request) {
   }
 
   let event: Stripe.Event;
+  const stripe = getStripe();
 
   try {
     event = stripe.webhooks.constructEvent(

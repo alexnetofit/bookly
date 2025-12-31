@@ -2,9 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-12-15.clover",
-});
+// Inicializar Stripe de forma lazy para evitar erro durante build
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-12-15.clover",
+  });
+}
 
 // Price IDs do Stripe
 const PRICE_IDS = {
@@ -40,6 +43,7 @@ export async function POST(request: Request) {
     const priceId = PRICE_IDS[plan as keyof typeof PRICE_IDS];
 
     // Criar sessão de checkout
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
