@@ -74,7 +74,10 @@ export function BookForm({ book, mode }: BookFormProps) {
   // Verificar se usuário atingiu limite de livros (apenas para criação)
   useEffect(() => {
     const checkBookLimit = async () => {
-      if (mode !== "create" || !user) return;
+      if (mode !== "create" || !user) {
+        setCheckingLimit(false);
+        return;
+      }
       
       const { count } = await supabase
         .from("books")
@@ -85,10 +88,11 @@ export function BookForm({ book, mode }: BookFormProps) {
       setCheckingLimit(false);
     };
 
-    if (user) {
+    // Só verifica o limite após o profile carregar
+    if (!isProfileLoading) {
       checkBookLimit();
     }
-  }, [user, mode, supabase]);
+  }, [user, mode, supabase, isProfileLoading]);
 
   // Verificar se usuário tem plano premium ativo
   const isPremium = profile?.plan && 
