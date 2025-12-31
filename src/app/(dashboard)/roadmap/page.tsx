@@ -129,84 +129,44 @@ export default function RoadmapPage() {
     try {
       if (hasVoted) {
         // Remove vote
-        const { error: deleteError } = await supabase
+        await supabase
           .from("roadmap_votes")
           .delete()
           .eq("user_id", user.id)
           .eq("item_id", itemId);
-
-        if (deleteError) throw deleteError;
-
-        // Count actual votes from database
-        const { count } = await supabase
-          .from("roadmap_votes")
-          .select("*", { count: "exact", head: true })
-          .eq("item_id", itemId);
-
-        const newCount = count ?? 0;
-
-        // Update votes_count with actual count
-        await supabase
-          .from("roadmap_items")
-          .update({ votes_count: newCount })
-          .eq("id", itemId);
-
-        // Update local state
-        setUserVotes((prev) => prev.filter((id) => id !== itemId));
-        setItems((prev) =>
-          prev.map((item) =>
-            item.id === itemId ? { ...item, votes_count: newCount } : item
-          )
-        );
       } else {
-        // Check if vote already exists (prevent duplicates)
-        const { data: existingVote } = await supabase
-          .from("roadmap_votes")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("item_id", itemId)
-          .maybeSingle();
-
-        if (existingVote) {
-          // Vote already exists, just update UI
-          setUserVotes((prev) => 
-            prev.includes(itemId) ? prev : [...prev, itemId]
-          );
-          setVotingItemId(null);
-          return;
-        }
-
-        // Add vote
-        const { error: insertError } = await supabase
-          .from("roadmap_votes")
-          .insert({ user_id: user.id, item_id: itemId });
-
-        if (insertError) throw insertError;
-
-        // Count actual votes from database
-        const { count } = await supabase
-          .from("roadmap_votes")
-          .select("*", { count: "exact", head: true })
-          .eq("item_id", itemId);
-
-        const newCount = count ?? 0;
-
-        // Update votes_count with actual count
+        // Add vote (constraint UNIQUE prevents duplicates)
         await supabase
-          .from("roadmap_items")
-          .update({ votes_count: newCount })
-          .eq("id", itemId);
-
-        // Update local state
-        setUserVotes((prev) => 
-          prev.includes(itemId) ? prev : [...prev, itemId]
-        );
-        setItems((prev) =>
-          prev.map((item) =>
-            item.id === itemId ? { ...item, votes_count: newCount } : item
-          )
-        );
+          .from("roadmap_votes")
+          .upsert({ user_id: user.id, item_id: itemId }, { onConflict: "user_id,item_id" });
       }
+
+      // Count ALL votes for this item from database
+      const { count } = await supabase
+        .from("roadmap_votes")
+        .select("*", { count: "exact", head: true })
+        .eq("item_id", itemId);
+
+      const newCount = count ?? 0;
+
+      // Update votes_count in roadmap_items
+      await supabase
+        .from("roadmap_items")
+        .update({ votes_count: newCount })
+        .eq("id", itemId);
+
+      // Update local state
+      if (hasVoted) {
+        setUserVotes((prev) => prev.filter((id) => id !== itemId));
+      } else {
+        setUserVotes((prev) => [...prev, itemId]);
+      }
+      
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId ? { ...item, votes_count: newCount } : item
+        )
+      );
     } catch (error) {
       console.error("Erro ao votar:", error);
       // Refetch to sync state on error
