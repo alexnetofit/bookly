@@ -98,24 +98,55 @@ export async function POST(request: Request) {
   // Processar reembolso (charge.refunded)
   if (event.type === "charge.refunded") {
     const charge = event.data.object as Stripe.Charge;
+    const customerId = charge.customer as string;
     const customerEmail = charge.billing_details?.email || charge.receipt_email;
 
-    if (customerEmail) {
-      // Buscar usuário pelo email e reverter para plano grátis
-      const { error: updateError } = await supabaseAdmin
+    console.log(`Processing refund - customerId: ${customerId}, email: ${customerEmail}`);
+
+    let updated = false;
+
+    // Primeiro tentar pelo stripe_customer_id (mais confiável)
+    if (customerId) {
+      const { error: updateError, data } = await supabaseAdmin
         .from("users_profile")
         .update({
           plan: "free",
           subscription_expires_at: null,
           stripe_subscription_id: null,
         })
-        .eq("email", customerEmail);
+        .eq("stripe_customer_id", customerId)
+        .select();
 
-      if (updateError) {
-        console.error("Error reverting user plan on refund:", updateError);
+      if (!updateError && data && data.length > 0) {
+        console.log(`Plan reverted to free for customer: ${customerId}`);
+        updated = true;
       } else {
-        console.log(`Plan reverted to free for: ${customerEmail}`);
+        console.log(`No user found with stripe_customer_id: ${customerId}`);
       }
+    }
+
+    // Se não encontrou pelo customer_id, tentar pelo email
+    if (!updated && customerEmail) {
+      const { error: updateError, data } = await supabaseAdmin
+        .from("users_profile")
+        .update({
+          plan: "free",
+          subscription_expires_at: null,
+          stripe_subscription_id: null,
+        })
+        .eq("email", customerEmail)
+        .select();
+
+      if (!updateError && data && data.length > 0) {
+        console.log(`Plan reverted to free for email: ${customerEmail}`);
+        updated = true;
+      } else {
+        console.log(`No user found with email: ${customerEmail}`);
+      }
+    }
+
+    if (!updated) {
+      console.error(`Could not find user to revert plan. customerId: ${customerId}, email: ${customerEmail}`);
     }
   }
 
@@ -123,21 +154,50 @@ export async function POST(request: Request) {
   if (event.type === "customer.subscription.deleted") {
     const subscription = event.data.object as Stripe.Subscription;
     const subscriptionId = subscription.id;
+    const customerId = subscription.customer as string;
 
-    // Buscar usuário pela subscription_id e reverter para plano grátis
-    const { error: updateError } = await supabaseAdmin
-      .from("users_profile")
-      .update({
-        plan: "free",
-        subscription_expires_at: null,
-        stripe_subscription_id: null,
-      })
-      .eq("stripe_subscription_id", subscriptionId);
+    console.log(`Processing subscription deleted - subscriptionId: ${subscriptionId}, customerId: ${customerId}`);
 
-    if (updateError) {
-      console.error("Error reverting user plan on subscription delete:", updateError);
-    } else {
-      console.log(`Plan reverted to free for subscription: ${subscriptionId}`);
+    let updated = false;
+
+    // Primeiro tentar pela subscription_id
+    if (subscriptionId) {
+      const { error: updateError, data } = await supabaseAdmin
+        .from("users_profile")
+        .update({
+          plan: "free",
+          subscription_expires_at: null,
+          stripe_subscription_id: null,
+        })
+        .eq("stripe_subscription_id", subscriptionId)
+        .select();
+
+      if (!updateError && data && data.length > 0) {
+        console.log(`Plan reverted to free for subscription: ${subscriptionId}`);
+        updated = true;
+      }
+    }
+
+    // Se não encontrou, tentar pelo customer_id
+    if (!updated && customerId) {
+      const { error: updateError, data } = await supabaseAdmin
+        .from("users_profile")
+        .update({
+          plan: "free",
+          subscription_expires_at: null,
+          stripe_subscription_id: null,
+        })
+        .eq("stripe_customer_id", customerId)
+        .select();
+
+      if (!updateError && data && data.length > 0) {
+        console.log(`Plan reverted to free for customer: ${customerId}`);
+        updated = true;
+      }
+    }
+
+    if (!updated) {
+      console.error(`Could not find user to revert plan on subscription delete. subscriptionId: ${subscriptionId}, customerId: ${customerId}`);
     }
   }
 
