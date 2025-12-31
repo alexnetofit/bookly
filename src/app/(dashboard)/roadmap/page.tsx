@@ -75,8 +75,11 @@ export default function RoadmapPage() {
         setItems(itemsData);
       }
 
-      // Fetch user's votes
-      if (user) {
+      // Reset votes when fetching
+      setUserVotes([]);
+
+      // Fetch user's votes only if user is authenticated
+      if (user?.id) {
         const { data: votesData } = await supabase
           .from("roadmap_votes")
           .select("item_id")
@@ -93,12 +96,32 @@ export default function RoadmapPage() {
     }
   };
 
+  // Fetch items on mount
   useEffect(() => {
     fetchItems();
-  }, [user]);
+  }, []);
+
+  // Refetch user votes when user changes
+  useEffect(() => {
+    const fetchUserVotes = async () => {
+      if (user?.id) {
+        const { data: votesData } = await supabase
+          .from("roadmap_votes")
+          .select("item_id")
+          .eq("user_id", user.id);
+
+        if (votesData) {
+          setUserVotes(votesData.map((v: UserVote) => v.item_id));
+        }
+      } else {
+        setUserVotes([]);
+      }
+    };
+    fetchUserVotes();
+  }, [user?.id]);
 
   const handleVote = async (itemId: string) => {
-    if (!user) return;
+    if (!user?.id) return;
 
     setVotingItemId(itemId);
     const hasVoted = userVotes.includes(itemId);
@@ -106,35 +129,78 @@ export default function RoadmapPage() {
     try {
       if (hasVoted) {
         // Remove vote
-        await supabase
+        const { error: deleteError } = await supabase
           .from("roadmap_votes")
           .delete()
           .eq("user_id", user.id)
           .eq("item_id", itemId);
 
-        // Decrement votes_count
-        await supabase.rpc("decrement_roadmap_votes", { item_id: itemId });
+        if (deleteError) throw deleteError;
 
-        setUserVotes(userVotes.filter((id) => id !== itemId));
-        setItems(items.map((item) =>
-          item.id === itemId ? { ...item, votes_count: item.votes_count - 1 } : item
-        ));
+        // Update votes_count directly in the table
+        const currentItem = items.find((i) => i.id === itemId);
+        if (currentItem) {
+          await supabase
+            .from("roadmap_items")
+            .update({ votes_count: Math.max(0, currentItem.votes_count - 1) })
+            .eq("id", itemId);
+        }
+
+        // Update local state
+        setUserVotes((prev) => prev.filter((id) => id !== itemId));
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === itemId
+              ? { ...item, votes_count: Math.max(0, item.votes_count - 1) }
+              : item
+          )
+        );
       } else {
+        // Check if vote already exists (prevent duplicates)
+        const { data: existingVote } = await supabase
+          .from("roadmap_votes")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("item_id", itemId)
+          .single();
+
+        if (existingVote) {
+          // Vote already exists, just update UI
+          setUserVotes((prev) => [...prev, itemId]);
+          setVotingItemId(null);
+          return;
+        }
+
         // Add vote
-        await supabase
+        const { error: insertError } = await supabase
           .from("roadmap_votes")
           .insert({ user_id: user.id, item_id: itemId });
 
-        // Increment votes_count
-        await supabase.rpc("increment_roadmap_votes", { item_id: itemId });
+        if (insertError) throw insertError;
 
-        setUserVotes([...userVotes, itemId]);
-        setItems(items.map((item) =>
-          item.id === itemId ? { ...item, votes_count: item.votes_count + 1 } : item
-        ));
+        // Update votes_count directly in the table
+        const currentItem = items.find((i) => i.id === itemId);
+        if (currentItem) {
+          await supabase
+            .from("roadmap_items")
+            .update({ votes_count: currentItem.votes_count + 1 })
+            .eq("id", itemId);
+        }
+
+        // Update local state
+        setUserVotes((prev) => [...prev, itemId]);
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === itemId
+              ? { ...item, votes_count: item.votes_count + 1 }
+              : item
+          )
+        );
       }
     } catch (error) {
       console.error("Erro ao votar:", error);
+      // Refetch to sync state on error
+      fetchItems();
     } finally {
       setVotingItemId(null);
     }
