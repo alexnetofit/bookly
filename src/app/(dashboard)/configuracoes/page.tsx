@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export const dynamic = "force-dynamic";
 import { useRouter } from "next/navigation";
@@ -29,12 +29,20 @@ export default function ConfiguracoesPage() {
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [fullName, setFullName] = useState(profile?.full_name || "");
-  const [username, setUsername] = useState(profile?.username || "");
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  // Atualiza os campos quando o profile carregar
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || "");
+      setUsername(profile.username || "");
+    }
+  }, [profile]);
 
   const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

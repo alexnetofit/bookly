@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton, EmptyState, Button } from "@/components/ui";
-import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp } from "lucide-react";
+import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp, MessageCircle, Tag } from "lucide-react";
 import Link from "next/link";
 import type { Book as BookType, AnnualGoal } from "@/types/database";
 
@@ -18,6 +18,8 @@ interface BookStats {
   desistido: number;
   total_paginas_lidas: number;
   autores_unicos: number;
+  generos_unicos: number;
+  total_posts: number;
 }
 
 interface AuthorRanking {
@@ -54,7 +56,20 @@ export default function DashboardPage() {
 
       const books = (booksData || []) as BookType[];
 
+      // Fetch user's posts count
+      const { count: postsCount } = await supabase
+        .from("community_posts")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
       if (books.length > 0) {
+        // Calculate unique genres
+        const generosUnicos = new Set(
+          books
+            .filter((b: BookType) => b.genero)
+            .map((b: BookType) => b.genero)
+        ).size;
+
         // Calculate stats
         const statsData: BookStats = {
           total: books.length,
@@ -64,6 +79,8 @@ export default function DashboardPage() {
           desistido: books.filter((b: BookType) => b.status_leitura === "desistido").length,
           total_paginas_lidas: books.reduce((acc: number, b: BookType) => acc + (b.paginas_lidas || 0), 0),
           autores_unicos: new Set(books.map((b: BookType) => b.autor.toLowerCase())).size,
+          generos_unicos: generosUnicos,
+          total_posts: postsCount || 0,
         };
         setStats(statsData);
 
@@ -168,7 +185,7 @@ export default function DashboardPage() {
       </Card>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
         <StatCard
           icon={<BookOpen className="w-5 h-5" />}
           label="Lidos"
@@ -210,6 +227,20 @@ export default function DashboardPage() {
           value={stats?.autores_unicos || 0}
           color="text-orange-500"
           bgColor="bg-orange-500/10"
+        />
+        <StatCard
+          icon={<Tag className="w-5 h-5" />}
+          label="Gêneros"
+          value={stats?.generos_unicos || 0}
+          color="text-pink-500"
+          bgColor="bg-pink-500/10"
+        />
+        <StatCard
+          icon={<MessageCircle className="w-5 h-5" />}
+          label="Posts"
+          value={stats?.total_posts || 0}
+          color="text-cyan-500"
+          bgColor="bg-cyan-500/10"
         />
       </div>
 

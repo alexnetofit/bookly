@@ -27,6 +27,35 @@ const formatConfig: Record<BookFormat, { label: string; icon: typeof BookMarked 
   audiobook: { label: "Audio", icon: Headphones },
 };
 
+const genreColors: Record<string, string> = {
+  "Ficção": "bg-blue-100 text-blue-700",
+  "Não ficção": "bg-slate-100 text-slate-700",
+  "Fantasia": "bg-purple-100 text-purple-700",
+  "Ficção científica": "bg-cyan-100 text-cyan-700",
+  "Romance": "bg-pink-100 text-pink-700",
+  "Romance de época": "bg-rose-100 text-rose-700",
+  "Mistério & Suspense": "bg-amber-100 text-amber-700",
+  "Terror / Horror": "bg-red-100 text-red-700",
+  "Aventura": "bg-orange-100 text-orange-700",
+  "Drama": "bg-indigo-100 text-indigo-700",
+  "Literatura Clássica": "bg-stone-100 text-stone-700",
+  "Young Adult (YA)": "bg-fuchsia-100 text-fuchsia-700",
+  "Infantil": "bg-lime-100 text-lime-700",
+  "Poesia": "bg-violet-100 text-violet-700",
+  "Contos": "bg-teal-100 text-teal-700",
+  "Graphic Novel / Quadrinhos": "bg-yellow-100 text-yellow-700",
+  "Biografia / Autobiografia": "bg-emerald-100 text-emerald-700",
+  "História": "bg-amber-100 text-amber-800",
+  "Autoajuda & Desenvolvimento pessoal": "bg-green-100 text-green-700",
+  "Religião & Espiritualidade": "bg-sky-100 text-sky-700",
+  "Filosofia": "bg-zinc-100 text-zinc-700",
+  "Psicologia": "bg-cyan-100 text-cyan-700",
+  "Negócios & Economia": "bg-blue-100 text-blue-800",
+  "Educação & Estudos": "bg-indigo-100 text-indigo-700",
+  "Ensaios": "bg-neutral-100 text-neutral-700",
+  "Crônica": "bg-orange-100 text-orange-700",
+};
+
 export const BookCard = memo(function BookCard({ book, onDelete }: BookCardProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -96,6 +125,15 @@ export const BookCard = memo(function BookCard({ book, onDelete }: BookCardProps
               <p className="text-sm text-muted-foreground truncate" title={book.autor}>
                 {book.autor}
               </p>
+              {/* Genre badge */}
+              {book.genero && (
+                <span className={cn(
+                  "inline-block mt-1.5 px-2 py-0.5 text-xs font-medium rounded-full",
+                  genreColors[book.genero] || "bg-gray-100 text-gray-700"
+                )}>
+                  {book.genero}
+                </span>
+              )}
               {/* Rating inline when has cover */}
               {book.rating && book.cover_url && (
                 <div className="mt-2">

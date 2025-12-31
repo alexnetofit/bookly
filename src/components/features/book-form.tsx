@@ -540,7 +540,13 @@ export function BookForm({ book, mode }: BookFormProps) {
                 type="date"
                 value={formData.data_termino}
                 onChange={(e) => handleChange("data_termino", e.target.value)}
+                min={formData.data_inicio || undefined}
               />
+              {formData.data_inicio && (
+                <p className="text-xs text-muted-foreground">
+                  Deve ser igual ou posterior a {new Date(formData.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}
+                </p>
+              )}
             </div>
           )}
         </div>
