@@ -41,12 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (notification.status === "sent") {
-      return NextResponse.json(
-        { error: "Esta notificação já foi enviada" },
-        { status: 400 }
-      );
-    }
+    // Permite reenviar notificações (não bloqueia se já foi enviada)
 
     // Build OneSignal payload
     const onesignalPayload: any = {

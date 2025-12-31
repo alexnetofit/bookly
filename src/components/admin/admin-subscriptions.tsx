@@ -32,18 +32,16 @@ import {
 } from "lucide-react";
 
 const planOptions = [
-  { value: "", label: "Sem plano" },
-  { value: "mensal", label: "Mensal (1 mês)" },
-  { value: "trimestral", label: "Trimestral (3 meses)" },
-  { value: "semestral", label: "Semestral (6 meses)" },
-  { value: "anual", label: "Anual (12 meses)" },
+  { value: "", label: "Grátis (sem plano)" },
+  { value: "explorer", label: "Explorador de Páginas (3 meses)" },
+  { value: "traveler", label: "Viajante de Histórias (6 meses)" },
+  { value: "devourer", label: "Devorador de Mundos (12 meses)" },
 ];
 
 const planDurations: Record<string, number> = {
-  mensal: 1,
-  trimestral: 3,
-  semestral: 6,
-  anual: 12,
+  explorer: 3,
+  traveler: 6,
+  devourer: 12,
 };
 
 const filterOptions = [
