@@ -45,12 +45,12 @@ export async function GET() {
     try {
       const subscription = await stripe.subscriptions.retrieve(
         profile.stripe_subscription_id
-      );
+      ) as Stripe.Subscription;
 
       return NextResponse.json({
         status: subscription.status,
         cancel_at_period_end: subscription.cancel_at_period_end,
-        current_period_end: subscription.current_period_end,
+        current_period_end: (subscription as unknown as { current_period_end?: number }).current_period_end || null,
         cancel_at: subscription.cancel_at,
       });
     } catch {
