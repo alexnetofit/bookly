@@ -187,6 +187,14 @@ export default function ComunidadePage() {
     fetchFollowing();
   };
 
+  const handleFollowChange = (userId: string, isFollowing: boolean) => {
+    if (isFollowing) {
+      setFollowingIds(prev => [...prev, userId]);
+    } else {
+      setFollowingIds(prev => prev.filter(id => id !== userId));
+    }
+  };
+
   // Mostrar loading enquanto profile carrega (profileLoading ou profile ainda não existe)
   if (profileLoading || !profile) {
     return (
@@ -346,6 +354,7 @@ export default function ComunidadePage() {
               onDelete={handleRefresh}
               onUpdate={handleRefresh}
               onOpenComments={() => setSelectedPostId(post.id)}
+              onFollowChange={handleFollowChange}
             />
           ))}
           

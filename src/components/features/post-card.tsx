@@ -30,6 +30,7 @@ interface PostCardProps {
   onDelete?: () => void;
   onOpenComments?: () => void;
   onUpdate?: () => void;
+  onFollowChange?: (userId: string, isFollowing: boolean) => void;
 }
 
 // Format relative time like Twitter
@@ -46,7 +47,7 @@ function formatRelativeTime(dateString: string): string {
   return date.toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
 }
 
-export const PostCard = memo(function PostCard({ post, onDelete, onOpenComments, onUpdate }: PostCardProps) {
+export const PostCard = memo(function PostCard({ post, onDelete, onOpenComments, onUpdate, onFollowChange }: PostCardProps) {
   const { user } = useUser();
   const supabase = createClient();
   const { showToast } = useToast();
@@ -132,6 +133,7 @@ export const PostCard = memo(function PostCard({ post, onDelete, onOpenComments,
           .eq("following_id", post.user_id);
 
         setIsFollowing(false);
+        onFollowChange?.(post.user_id, false);
         showToast("Deixou de seguir", "success");
       } else {
         await supabase.from("user_follows").insert({
@@ -140,6 +142,7 @@ export const PostCard = memo(function PostCard({ post, onDelete, onOpenComments,
         });
 
         setIsFollowing(true);
+        onFollowChange?.(post.user_id, true);
         showToast("Seguindo!", "success");
       }
     } catch (error) {
