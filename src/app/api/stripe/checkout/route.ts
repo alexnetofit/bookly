@@ -18,6 +18,15 @@ const PRICE_IDS = {
 
 export async function POST(request: Request) {
   try {
+    // Verificar se Stripe está configurado
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error("STRIPE_SECRET_KEY não configurada");
+      return NextResponse.json(
+        { error: "Pagamento não configurado. Entre em contato com o suporte." },
+        { status: 500 }
+      );
+    }
+
     const supabase = await createClient();
     
     // Verificar usuário autenticado
@@ -63,10 +72,11 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro ao criar sessão de checkout:", error);
+    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
     return NextResponse.json(
-      { error: "Erro ao processar pagamento" },
+      { error: `Erro ao processar pagamento: ${errorMessage}` },
       { status: 500 }
     );
   }
