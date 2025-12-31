@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton, EmptyStat
 import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp, MessageCircle, Tag, X } from "lucide-react";
 import Link from "next/link";
 import type { Book as BookType, AnnualGoal, CommunityPost } from "@/types/database";
+import { ShareDashboard } from "@/components/features/share-dashboard";
 
 type ModalType = "lidos" | "lendo" | "quero_ler" | "abandonados" | "paginas" | "autores" | "generos" | "posts" | null;
 
@@ -148,12 +149,19 @@ export default function DashboardPage() {
             Aqui está o resumo da sua jornada de leitura
           </p>
         </div>
-        <Link href="/estante/novo">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar livro
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <ShareDashboard 
+            stats={stats} 
+            goal={goal} 
+            userName={profile?.full_name?.split(" ")[0] || "Leitor"} 
+          />
+          <Link href="/estante/novo">
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar livro
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Annual Goal Card */}
