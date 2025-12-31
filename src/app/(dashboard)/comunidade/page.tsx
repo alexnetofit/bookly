@@ -73,26 +73,47 @@ export default function ComunidadePage() {
     }
   }, [user?.id]);
 
-  const fetchPosts = useCallback(async (showRefreshIndicator = false, reset = false) => {
+  const fetchPosts = useCallback(async (showRefreshIndicator = false, reset = false, currentFilter?: FilterType) => {
     if (showRefreshIndicator) {
       setIsRefreshing(true);
     } else if (reset) {
       setIsLoading(true);
     }
 
+    const activeFilter = currentFilter ?? filter;
     const currentPage = reset ? 0 : page;
     const from = currentPage * POSTS_PER_PAGE;
     const to = from + POSTS_PER_PAGE - 1;
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("community_posts")
         .select(`
           *,
           user_profile:users_profile(id, full_name, username, avatar_url, email)
         `)
-        .order("created_at", { ascending: false })
-        .range(from, to);
+        .order("created_at", { ascending: false });
+
+      // Filtrar no backend para melhor performance
+      if (activeFilter === "seguindo" && followingIds.length > 0) {
+        query = query.in("user_id", followingIds);
+      } else if (activeFilter === "seguindo" && followingIds.length === 0) {
+        // Não segue ninguém, retorna vazio
+        setPosts([]);
+        setHasMore(false);
+        setIsLoading(false);
+        setIsRefreshing(false);
+        return;
+      } else if (activeFilter === "nao_seguindo") {
+        // Excluir quem segue e o próprio usuário
+        const excludeIds = [...followingIds];
+        if (user?.id) excludeIds.push(user.id);
+        if (excludeIds.length > 0) {
+          query = query.not("user_id", "in", `(${excludeIds.join(",")})`);
+        }
+      }
+
+      const { data, error } = await query.range(from, to);
 
       if (error) throw error;
 
@@ -113,7 +134,7 @@ export default function ComunidadePage() {
       setIsRefreshing(false);
       setIsLoadingMore(false);
     }
-  }, [page]);
+  }, [page, filter, followingIds, user?.id]);
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
@@ -126,14 +147,26 @@ export default function ComunidadePage() {
     const to = from + POSTS_PER_PAGE - 1;
 
     try {
-      const { data } = await supabase
+      let query = supabase
         .from("community_posts")
         .select(`
           *,
           user_profile:users_profile(id, full_name, username, avatar_url, email)
         `)
-        .order("created_at", { ascending: false })
-        .range(from, to);
+        .order("created_at", { ascending: false });
+
+      // Aplicar mesmo filtro do backend
+      if (filter === "seguindo" && followingIds.length > 0) {
+        query = query.in("user_id", followingIds);
+      } else if (filter === "nao_seguindo") {
+        const excludeIds = [...followingIds];
+        if (user?.id) excludeIds.push(user.id);
+        if (excludeIds.length > 0) {
+          query = query.not("user_id", "in", `(${excludeIds.join(",")})`);
+        }
+      }
+
+      const { data } = await query.range(from, to);
 
       const newPosts = data || [];
       setPosts(prev => [...prev, ...newPosts]);
@@ -143,7 +176,7 @@ export default function ComunidadePage() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [page, isLoadingMore, hasMore]);
+  }, [page, isLoadingMore, hasMore, filter, followingIds, user?.id]);
 
   // Intersection Observer para scroll infinito
   useEffect(() => {
@@ -172,13 +205,14 @@ export default function ComunidadePage() {
     fetchFollowing();
   }, [user?.id]);
 
-  // Filtrar posts baseado no filtro selecionado
-  const filteredPosts = posts.filter(post => {
-    if (filter === "todos") return true;
-    if (filter === "seguindo") return followingIds.includes(post.user_id);
-    if (filter === "nao_seguindo") return !followingIds.includes(post.user_id) && post.user_id !== user?.id;
-    return true;
-  });
+  // Recarregar posts quando o filtro mudar
+  useEffect(() => {
+    if (!isLoading && followingIds !== undefined) {
+      setPage(0);
+      setHasMore(true);
+      fetchPosts(false, true, filter);
+    }
+  }, [filter]);
 
   const handleRefresh = () => {
     setPage(0);
@@ -187,13 +221,54 @@ export default function ComunidadePage() {
     fetchFollowing();
   };
 
-  const handleFollowChange = (userId: string, isFollowing: boolean) => {
-    if (isFollowing) {
-      setFollowingIds(prev => [...prev, userId]);
-    } else {
-      setFollowingIds(prev => prev.filter(id => id !== userId));
+  const handleFollowChange = useCallback((userId: string, isNowFollowing: boolean) => {
+    // Atualizar lista local de seguidos
+    const newFollowingIds = isNowFollowing 
+      ? [...followingIds, userId]
+      : followingIds.filter(id => id !== userId);
+    
+    setFollowingIds(newFollowingIds);
+    
+    // Se estiver em filtro específico, recarregar com os novos IDs
+    if (filter === "seguindo" || filter === "nao_seguindo") {
+      // Recarregar posts com a lista atualizada
+      setPage(0);
+      setHasMore(true);
+      
+      // Buscar posts com os novos followingIds
+      const from = 0;
+      const to = POSTS_PER_PAGE - 1;
+      
+      let query = supabase
+        .from("community_posts")
+        .select(`
+          *,
+          user_profile:users_profile(id, full_name, username, avatar_url, email)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (filter === "seguindo") {
+        if (newFollowingIds.length > 0) {
+          query = query.in("user_id", newFollowingIds);
+        } else {
+          setPosts([]);
+          setHasMore(false);
+          return;
+        }
+      } else if (filter === "nao_seguindo") {
+        const excludeIds = [...newFollowingIds];
+        if (user?.id) excludeIds.push(user.id);
+        if (excludeIds.length > 0) {
+          query = query.not("user_id", "in", `(${excludeIds.join(",")})`);
+        }
+      }
+
+      query.range(from, to).then(({ data }) => {
+        setPosts(data || []);
+        setHasMore((data?.length || 0) === POSTS_PER_PAGE);
+      });
     }
-  };
+  }, [filter, followingIds, user?.id]);
 
   // Mostrar loading enquanto profile carrega (profileLoading ou profile ainda não existe)
   if (profileLoading || !profile) {
@@ -323,16 +398,18 @@ export default function ComunidadePage() {
             </div>
           ))}
         </div>
-      ) : filteredPosts.length === 0 ? (
+      ) : posts.length === 0 ? (
         <div className="py-16">
           <EmptyState
             icon={<Users className="w-16 h-16" />}
-            title={filter === "seguindo" ? "Nenhum post de quem você segue" : "Nenhum post ainda"}
+            title={filter === "seguindo" ? "Nenhum post de quem você segue" : filter === "nao_seguindo" ? "Você já segue todos!" : "Nenhum post ainda"}
             description={filter === "seguindo" 
               ? "Comece a seguir outros leitores para ver seus posts aqui!" 
+              : filter === "nao_seguindo"
+              ? "Não há posts de pessoas que você ainda não segue."
               : "Seja o primeiro a compartilhar algo com a comunidade!"}
             action={
-              filter === "seguindo" ? (
+              filter !== "todos" ? (
                 <Button onClick={() => setFilter("todos")} className="rounded-full">
                   Ver todos os posts
                 </Button>
@@ -347,7 +424,7 @@ export default function ComunidadePage() {
         </div>
       ) : (
         <div className="divide-y">
-          {filteredPosts.map((post) => (
+          {posts.map((post) => (
             <PostCard
               key={post.id}
               post={post}
@@ -365,7 +442,7 @@ export default function ComunidadePage() {
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             )}
-            {!hasMore && filteredPosts.length > 0 && (
+            {!hasMore && posts.length > 0 && (
               <p className="text-center text-sm text-muted-foreground">
                 Você chegou ao fim 📚
               </p>
