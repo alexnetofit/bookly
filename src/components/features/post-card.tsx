@@ -19,6 +19,8 @@ import {
   Save,
   X,
   MoreHorizontal,
+  UserPlus,
+  UserCheck,
 } from "lucide-react";
 
 interface PostCardProps {
@@ -56,6 +58,10 @@ export const PostCard = memo(function PostCard({ post, onDelete, onOpenComments,
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
+  // Follow state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
+
   // Edit state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
@@ -91,6 +97,58 @@ export const PostCard = memo(function PostCard({ post, onDelete, onOpenComments,
         });
     }
   });
+
+  // Check if user follows the post author
+  useState(() => {
+    if (user && post.user_id && user.id !== post.user_id) {
+      supabase
+        .from("user_follows")
+        .select("id")
+        .eq("follower_id", user.id)
+        .eq("following_id", post.user_id)
+        .single()
+        .then(({ data }: { data: unknown }) => {
+          if (data) setIsFollowing(true);
+        });
+    }
+  });
+
+  const handleFollow = async () => {
+    if (!user) {
+      showToast("Faça login para seguir usuários", "error");
+      return;
+    }
+
+    if (isOwner) return;
+
+    setIsFollowLoading(true);
+
+    try {
+      if (isFollowing) {
+        await supabase
+          .from("user_follows")
+          .delete()
+          .eq("follower_id", user.id)
+          .eq("following_id", post.user_id);
+
+        setIsFollowing(false);
+        showToast("Deixou de seguir", "success");
+      } else {
+        await supabase.from("user_follows").insert({
+          follower_id: user.id,
+          following_id: post.user_id,
+        });
+
+        setIsFollowing(true);
+        showToast("Seguindo!", "success");
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      showToast("Erro ao processar", "error");
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
 
   const handleLike = async () => {
     if (!user) {
@@ -212,6 +270,36 @@ export const PostCard = memo(function PostCard({ post, onDelete, onOpenComments,
                 <span className="font-semibold truncate">
                   {post.user_profile?.full_name || "Usuário"}
                 </span>
+                {/* Botão Seguir */}
+                {!isOwner && user && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFollow();
+                    }}
+                    disabled={isFollowLoading}
+                    className={cn(
+                      "ml-1 px-2 py-0.5 text-xs font-medium rounded-full transition-colors flex items-center gap-1",
+                      isFollowing
+                        ? "bg-primary/10 text-primary hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90"
+                    )}
+                  >
+                    {isFollowLoading ? (
+                      <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                    ) : isFollowing ? (
+                      <>
+                        <UserCheck className="w-3 h-3" />
+                        Seguindo
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-3 h-3" />
+                        Seguir
+                      </>
+                    )}
+                  </button>
+                )}
                 <span className="text-muted-foreground text-sm truncate">
                   {getHandle(post.user_profile)}
                 </span>

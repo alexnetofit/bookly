@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
@@ -10,7 +10,10 @@ import { useUser } from "@/hooks/useUser";
 import { PostCard } from "@/components/features/post-card";
 import { Button, Skeleton, EmptyState, Card, CardContent } from "@/components/ui";
 import type { CommunityPost, UserProfile } from "@/types/database";
-import { Plus, Users, RefreshCw, Feather, Lock, Crown } from "lucide-react";
+import { Plus, Users, RefreshCw, Feather, Lock, Crown, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type FilterType = "todos" | "seguindo" | "nao_seguindo";
 
 // Lazy load modals for better performance
 const CreatePostModal = dynamic(
@@ -27,15 +30,27 @@ interface PostWithRelations extends CommunityPost {
   user_profile?: UserProfile;
 }
 
+const POSTS_PER_PAGE = 20;
+
 export default function ComunidadePage() {
   const [posts, setPosts] = useState<PostWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  
+  // Filtros
+  const [filter, setFilter] = useState<FilterType>("todos");
+  const [followingIds, setFollowingIds] = useState<string[]>([]);
+  
+  // Scroll infinito
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const supabase = createClient();
-  const { profile, isLoading: profileLoading } = useUser();
+  const { profile, user, isLoading: profileLoading } = useUser();
 
   // Verificar se usuário tem plano premium
   const paidPlans = ["explorer", "traveler", "devourer"];
@@ -44,12 +59,71 @@ export default function ComunidadePage() {
     profile.subscription_expires_at && 
     new Date(profile.subscription_expires_at) > new Date();
 
-  const fetchPosts = useCallback(async (showRefreshIndicator = false) => {
+  // Buscar lista de usuários seguidos
+  const fetchFollowing = useCallback(async () => {
+    if (!user?.id) return;
+    
+    const { data } = await supabase
+      .from("user_follows")
+      .select("following_id")
+      .eq("follower_id", user.id);
+    
+    if (data) {
+      setFollowingIds(data.map(f => f.following_id));
+    }
+  }, [user?.id]);
+
+  const fetchPosts = useCallback(async (showRefreshIndicator = false, reset = false) => {
     if (showRefreshIndicator) {
       setIsRefreshing(true);
-    } else {
+    } else if (reset) {
       setIsLoading(true);
     }
+
+    const currentPage = reset ? 0 : page;
+    const from = currentPage * POSTS_PER_PAGE;
+    const to = from + POSTS_PER_PAGE - 1;
+
+    try {
+      const { data, error } = await supabase
+        .from("community_posts")
+        .select(`
+          *,
+          user_profile:users_profile(id, full_name, username, avatar_url, email)
+        `)
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+
+      const newPosts = data || [];
+      
+      if (reset) {
+        setPosts(newPosts);
+        setPage(0);
+      } else {
+        setPosts(prev => [...prev, ...newPosts]);
+      }
+      
+      setHasMore(newPosts.length === POSTS_PER_PAGE);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+      setIsLoadingMore(false);
+    }
+  }, [page]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+    
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    
+    const from = nextPage * POSTS_PER_PAGE;
+    const to = from + POSTS_PER_PAGE - 1;
 
     try {
       const { data } = await supabase
@@ -59,20 +133,59 @@ export default function ComunidadePage() {
           user_profile:users_profile(id, full_name, username, avatar_url, email)
         `)
         .order("created_at", { ascending: false })
-        .limit(50);
+        .range(from, to);
 
-      setPosts(data || []);
+      const newPosts = data || [];
+      setPosts(prev => [...prev, ...newPosts]);
+      setHasMore(newPosts.length === POSTS_PER_PAGE);
     } catch (error) {
-      console.error("Error fetching posts:", error);
+      console.error("Error loading more posts:", error);
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      setIsLoadingMore(false);
     }
+  }, [page, isLoadingMore, hasMore]);
+
+  // Intersection Observer para scroll infinito
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore && !isLoading) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, isLoading, loadMore]);
+
+  useEffect(() => {
+    fetchPosts(false, true);
+    fetchFollowing();
   }, []);
 
   useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+    fetchFollowing();
+  }, [user?.id]);
+
+  // Filtrar posts baseado no filtro selecionado
+  const filteredPosts = posts.filter(post => {
+    if (filter === "todos") return true;
+    if (filter === "seguindo") return followingIds.includes(post.user_id);
+    if (filter === "nao_seguindo") return !followingIds.includes(post.user_id) && post.user_id !== user?.id;
+    return true;
+  });
+
+  const handleRefresh = () => {
+    setPage(0);
+    setHasMore(true);
+    fetchPosts(true, true);
+    fetchFollowing();
+  };
 
   // Mostrar loading enquanto profile carrega (profileLoading ou profile ainda não existe)
   if (profileLoading || !profile) {
@@ -126,12 +239,32 @@ export default function ComunidadePage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => fetchPosts(true)}
+            onClick={handleRefresh}
             disabled={isRefreshing}
             className="rounded-full"
           >
             <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
+        </div>
+        
+        {/* Filtros */}
+        <div className="flex gap-2 mt-3">
+          {(["todos", "seguindo", "nao_seguindo"] as FilterType[]).map((filterOption) => (
+            <button
+              key={filterOption}
+              onClick={() => setFilter(filterOption)}
+              className={cn(
+                "px-4 py-1.5 text-sm font-medium rounded-full transition-colors",
+                filter === filterOption
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted hover:bg-muted/80 text-muted-foreground"
+              )}
+            >
+              {filterOption === "todos" && "Todos"}
+              {filterOption === "seguindo" && "Seguindo"}
+              {filterOption === "nao_seguindo" && "Descobrir"}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -182,31 +315,53 @@ export default function ComunidadePage() {
             </div>
           ))}
         </div>
-      ) : posts.length === 0 ? (
+      ) : filteredPosts.length === 0 ? (
         <div className="py-16">
           <EmptyState
             icon={<Users className="w-16 h-16" />}
-            title="Nenhum post ainda"
-            description="Seja o primeiro a compartilhar algo com a comunidade!"
+            title={filter === "seguindo" ? "Nenhum post de quem você segue" : "Nenhum post ainda"}
+            description={filter === "seguindo" 
+              ? "Comece a seguir outros leitores para ver seus posts aqui!" 
+              : "Seja o primeiro a compartilhar algo com a comunidade!"}
             action={
-              <Button onClick={() => setShowCreateModal(true)} className="rounded-full">
-                <Plus className="w-4 h-4 mr-2" />
-                Criar primeiro post
-              </Button>
+              filter === "seguindo" ? (
+                <Button onClick={() => setFilter("todos")} className="rounded-full">
+                  Ver todos os posts
+                </Button>
+              ) : (
+                <Button onClick={() => setShowCreateModal(true)} className="rounded-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Criar primeiro post
+                </Button>
+              )
             }
           />
         </div>
       ) : (
         <div className="divide-y">
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <PostCard
               key={post.id}
               post={post}
-              onDelete={() => fetchPosts()}
-              onUpdate={() => fetchPosts()}
+              onDelete={handleRefresh}
+              onUpdate={handleRefresh}
               onOpenComments={() => setSelectedPostId(post.id)}
             />
           ))}
+          
+          {/* Sentinel para scroll infinito */}
+          <div ref={sentinelRef} className="py-4">
+            {isLoadingMore && (
+              <div className="flex justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            {!hasMore && filteredPosts.length > 0 && (
+              <p className="text-center text-sm text-muted-foreground">
+                Você chegou ao fim 📚
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -214,7 +369,7 @@ export default function ComunidadePage() {
       <CreatePostModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSuccess={() => fetchPosts()}
+        onSuccess={handleRefresh}
       />
 
       {selectedPostId && (

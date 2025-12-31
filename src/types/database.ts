@@ -98,6 +98,13 @@ export interface PostComment {
   user_profile?: UserProfile;
 }
 
+export interface UserFollow {
+  id: string;
+  follower_id: string;
+  following_id: string;
+  created_at: string;
+}
+
 // Database types for Supabase
 export interface Database {
   public: {
@@ -131,6 +138,11 @@ export interface Database {
         Row: PostComment;
         Insert: Omit<PostComment, "id" | "created_at">;
         Update: Partial<Omit<PostComment, "id" | "created_at">>;
+      };
+      user_follows: {
+        Row: UserFollow;
+        Insert: Omit<UserFollow, "id" | "created_at">;
+        Update: never;
       };
     };
   };
