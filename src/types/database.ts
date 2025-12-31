@@ -32,6 +32,7 @@ export interface UserProfile {
   plan: PlanType;
   subscription_expires_at: string | null;
   is_admin: boolean;
+  preferred_sort: string | null;
   created_at: string;
 }
 

@@ -108,7 +108,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
         {/* Dropdown menu */}
         {isOpen && (
-          <div className="absolute z-50 mt-1 w-full rounded-lg border border-input bg-card shadow-lg animate-in fade-in-0 zoom-in-95 duration-100">
+          <div className="absolute z-[100] mt-1 w-full rounded-lg border border-input bg-card shadow-lg animate-in fade-in-0 zoom-in-95 duration-100">
             {/* Search input */}
             {searchable && options.length > 5 && (
               <div className="p-2 border-b border-input">

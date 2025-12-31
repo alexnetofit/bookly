@@ -39,10 +39,11 @@ const sortOptions = [
 ];
 
 export default function EstantePage() {
-  const { user } = useUser();
+  const { user, profile } = useUser();
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [sortLoaded, setSortLoaded] = useState(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,6 +53,26 @@ export default function EstantePage() {
 
   const debouncedSearch = useDebounce(searchQuery, 300);
   const supabase = createClient();
+
+  // Carregar ordenação preferida do profile
+  useEffect(() => {
+    if (profile?.preferred_sort && !sortLoaded) {
+      setSortBy(profile.preferred_sort);
+      setSortLoaded(true);
+    }
+  }, [profile, sortLoaded]);
+
+  // Salvar ordenação preferida no banco
+  const handleSortChange = async (newSort: string) => {
+    setSortBy(newSort);
+    
+    if (user) {
+      await supabase
+        .from("users_profile")
+        .update({ preferred_sort: newSort })
+        .eq("id", user.id);
+    }
+  };
 
   const fetchBooks = useCallback(async () => {
     if (!user) return;
@@ -138,7 +159,7 @@ export default function EstantePage() {
           {/* Sort */}
           <Select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={(e) => handleSortChange(e.target.value)}
             options={sortOptions}
             className="w-full md:w-52 md:flex-shrink-0"
             searchable={false}
