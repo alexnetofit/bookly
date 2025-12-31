@@ -39,7 +39,7 @@ const sortOptions = [
 ];
 
 export default function EstantePage() {
-  const { user, profile, isLoading: profileLoading } = useUser();
+  const { user, profile } = useUser();
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -56,11 +56,11 @@ export default function EstantePage() {
 
   // Carregar ordenação preferida do profile (ou padrão se não tiver)
   useEffect(() => {
-    if (!profileLoading && !sortLoaded) {
-      setSortBy(profile?.preferred_sort || "created_at_desc");
+    if (profile && !sortLoaded) {
+      setSortBy(profile.preferred_sort || "created_at_desc");
       setSortLoaded(true);
     }
-  }, [profile, profileLoading, sortLoaded]);
+  }, [profile, sortLoaded]);
 
   // Salvar ordenação preferida no banco
   const handleSortChange = async (newSort: string) => {
