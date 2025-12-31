@@ -222,7 +222,7 @@ export default function RoadmapPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            Nos ajude a construir essa linda história
+            Ajude a construir essa linda história
           </h1>
           <p className="text-muted-foreground mt-1">
             Acompanhe o que estamos construindo e vote nas funcionalidades que você mais deseja
@@ -238,24 +238,27 @@ export default function RoadmapPage() {
         </Button>
       </div>
 
-      {/* Columns - Elegant style */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Columns - Card style with internal scroll */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {columns.map((column) => {
           const Icon = column.icon;
           const columnItems = getItemsByStatus(column.id);
 
           return (
-            <div key={column.id} className="space-y-4">
-              {/* Column Header */}
-              <div className="flex items-center gap-3">
+            <div 
+              key={column.id} 
+              className="flex flex-col rounded-2xl border bg-muted/30 overflow-hidden"
+            >
+              {/* Column Header - Fixed */}
+              <div className="flex items-center gap-3 p-4 border-b bg-card/50 backdrop-blur-sm sticky top-0">
                 <div className={cn(
-                  "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white shadow-sm",
+                  "w-9 h-9 rounded-lg bg-gradient-to-br flex items-center justify-center text-white shadow-sm",
                   column.accentColor
                 )}>
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="font-semibold text-foreground">
+                  <h2 className="font-semibold text-foreground text-sm">
                     {column.title}
                   </h2>
                   <p className="text-xs text-muted-foreground">{column.subtitle}</p>
@@ -269,10 +272,10 @@ export default function RoadmapPage() {
                 </span>
               </div>
 
-              {/* Items Container */}
-              <div className="space-y-3">
+              {/* Items Container - Scrollable */}
+              <div className="flex-1 p-3 space-y-3 max-h-[400px] overflow-y-auto">
                 {columnItems.length === 0 ? (
-                  <div className="rounded-2xl border-2 border-dashed border-muted-foreground/20 p-8 text-center">
+                  <div className="rounded-xl border-2 border-dashed border-muted-foreground/20 p-8 text-center">
                     <p className="text-muted-foreground text-sm">
                       Nenhum item ainda
                     </p>
@@ -286,18 +289,18 @@ export default function RoadmapPage() {
                       <div 
                         key={item.id} 
                         className={cn(
-                          "group relative rounded-2xl border bg-card p-5 transition-all duration-200",
-                          "hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5",
-                          hasVoted && "ring-2 ring-primary/20"
+                          "group relative rounded-xl border bg-card p-4 transition-all duration-200",
+                          "hover:shadow-md hover:shadow-black/5",
+                          hasVoted && "ring-2 ring-[#7CB342]/30"
                         )}
                       >
-                        <div className="flex gap-4">
-                          <div className="flex-1 space-y-2">
-                            <h3 className="font-semibold text-foreground leading-tight">
+                        <div className="flex gap-3">
+                          <div className="flex-1 space-y-1.5">
+                            <h3 className="font-semibold text-foreground leading-tight text-sm">
                               {item.title}
                             </h3>
                             {item.description && (
-                              <p className="text-sm text-muted-foreground leading-relaxed">
+                              <p className="text-xs text-muted-foreground leading-relaxed">
                                 {item.description}
                               </p>
                             )}
@@ -306,21 +309,21 @@ export default function RoadmapPage() {
                             onClick={() => handleVote(item.id)}
                             disabled={isVoting}
                             className={cn(
-                              "flex flex-col items-center justify-center gap-0.5 w-16 h-16 rounded-lg border-2 transition-all duration-200",
+                              "flex flex-col items-center justify-center gap-0.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 shrink-0",
                               hasVoted
                                 ? "border-[#7CB342] bg-[#7CB342]/10 text-[#7CB342]"
                                 : "border-muted-foreground/20 bg-muted/40 text-muted-foreground hover:border-muted-foreground/30"
                             )}
                           >
                             {isVoting ? (
-                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <ThumbsUp className={cn(
-                                "w-5 h-5",
+                                "w-4 h-4",
                                 hasVoted && "fill-[#7CB342]"
                               )} />
                             )}
-                            <span className="text-sm font-bold">{item.votes_count}</span>
+                            <span className="text-xs font-bold">{item.votes_count}</span>
                           </button>
                         </div>
                       </div>
