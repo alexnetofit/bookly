@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
@@ -34,30 +34,60 @@ interface HistoryYear {
   achieved: boolean;
 }
 
+// Cache em memória para metas (persiste entre navegações)
+interface MetasCache {
+  yearData: Record<number, Omit<YearData, "isEditing" | "newGoalAmount" | "isSaving">>;
+  history: HistoryYear[];
+  timestamp: number;
+}
+
+let metasCache: MetasCache | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
 export default function MetasPage() {
   const { user } = useUser();
-  const [isLoading, setIsLoading] = useState(true);
-  const [history, setHistory] = useState<HistoryYear[]>([]);
-  
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
 
-  const [yearData, setYearData] = useState<Record<number, YearData>>({
-    [currentYear]: { goal: null, booksRead: 0, isEditing: false, newGoalAmount: "", isSaving: false },
-    [nextYear]: { goal: null, booksRead: 0, isEditing: false, newGoalAmount: "", isSaving: false },
+  // Inicializa com cache se disponível e válido
+  const isCacheValid = metasCache && (Date.now() - metasCache.timestamp) < CACHE_TTL;
+  
+  const [isLoading, setIsLoading] = useState(!isCacheValid);
+  const [history, setHistory] = useState<HistoryYear[]>(isCacheValid ? metasCache!.history : []);
+  
+  const [yearData, setYearData] = useState<Record<number, YearData>>(() => {
+    if (isCacheValid && metasCache) {
+      return {
+        [currentYear]: { 
+          ...metasCache.yearData[currentYear], 
+          isEditing: false, 
+          newGoalAmount: metasCache.yearData[currentYear]?.goal?.goal_amount.toString() || "",
+          isSaving: false 
+        },
+        [nextYear]: { 
+          ...metasCache.yearData[nextYear], 
+          isEditing: false, 
+          newGoalAmount: metasCache.yearData[nextYear]?.goal?.goal_amount.toString() || "",
+          isSaving: false 
+        },
+      };
+    }
+    return {
+      [currentYear]: { goal: null, booksRead: 0, isEditing: false, newGoalAmount: "", isSaving: false },
+      [nextYear]: { goal: null, booksRead: 0, isEditing: false, newGoalAmount: "", isSaving: false },
+    };
   });
 
   const supabase = createClient();
   const { showToast } = useToast();
 
-  useEffect(() => {
-    if (user) {
-      fetchData();
-    }
-  }, [user]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     if (!user) return;
+    
+    // Se cache válido e não é refresh forçado, não busca
+    if (!forceRefresh && metasCache && (Date.now() - metasCache.timestamp) < CACHE_TTL) {
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -93,7 +123,7 @@ export default function MetasPage() {
       const currentYearGoal = allGoals?.find(g => g.year === currentYear) || null;
       const nextYearGoal = allGoals?.find(g => g.year === nextYear) || null;
 
-      setYearData({
+      const newYearData = {
         [currentYear]: {
           goal: currentYearGoal,
           booksRead: currentYearCount || 0,
@@ -108,7 +138,9 @@ export default function MetasPage() {
           newGoalAmount: nextYearGoal?.goal_amount.toString() || "",
           isSaving: false,
         },
-      });
+      };
+
+      setYearData(newYearData);
 
       // Build history for past years
       const pastGoals = allGoals?.filter(g => g.year < currentYear) || [];
@@ -134,12 +166,28 @@ export default function MetasPage() {
       }
 
       setHistory(historyData);
+
+      // Salva no cache
+      metasCache = {
+        yearData: {
+          [currentYear]: { goal: currentYearGoal, booksRead: currentYearCount || 0 },
+          [nextYear]: { goal: nextYearGoal, booksRead: nextYearCount || 0 },
+        },
+        history: historyData,
+        timestamp: Date.now(),
+      };
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, currentYear, nextYear]);
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user, fetchData]);
 
   const updateYearData = (year: number, updates: Partial<YearData>) => {
     setYearData(prev => ({
@@ -178,7 +226,10 @@ export default function MetasPage() {
 
       showToast("Meta atualizada com sucesso!", "success");
       updateYearData(year, { isEditing: false });
-      fetchData();
+      
+      // Invalida o cache e força refresh
+      metasCache = null;
+      fetchData(true);
     } catch (error) {
       console.error("Error saving goal:", error);
       showToast("Erro ao salvar meta", "error");
