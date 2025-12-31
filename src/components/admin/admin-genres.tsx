@@ -158,9 +158,9 @@ export function AdminGenres() {
       </Card>
 
       {/* Instructions */}
-      <Card className="border-blue-300 bg-blue-100 dark:border-blue-800 dark:bg-blue-900/30">
+      <Card className="border-amber-400 bg-amber-50 dark:border-amber-600 dark:bg-amber-900/30">
         <CardContent className="p-4">
-          <p className="text-sm text-blue-900 dark:text-blue-100">
+          <p className="text-sm text-amber-900 dark:text-amber-100">
             <strong>Nota:</strong> Após adicionar novos gêneros aqui, eles aparecerão automaticamente 
             no dropdown de seleção de gênero ao adicionar/editar livros.
           </p>
