@@ -18,7 +18,7 @@ import {
 } from "@/components/ui";
 import type { AnnualGoal } from "@/types/database";
 import { Target, Trophy, Edit2, Check, X, BookOpen, TrendingUp, History, CheckCircle2, XCircle } from "lucide-react";
-import { getMetasCache, setMetasCache, invalidateMetasCache } from "@/lib/cache";
+import { getMetasCache, setMetasCache, invalidateMetasCache, invalidateDashboardCache } from "@/lib/cache";
 
 interface YearData {
   goal: AnnualGoal | null;
@@ -219,8 +219,9 @@ export default function MetasPage() {
       showToast("Meta atualizada com sucesso!", "success");
       updateYearData(year, { isEditing: false });
       
-      // Invalida o cache e força refresh
+      // Invalida o cache de metas e dashboard (que mostra a meta também)
       invalidateMetasCache();
+      invalidateDashboardCache();
       fetchData(true);
     } catch (error) {
       console.error("Error saving goal:", error);
