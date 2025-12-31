@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import html2canvas from "html2canvas";
 import { Button, Modal, Progress } from "@/components/ui";
-import { Share2, Download, Instagram, Loader2, BookOpen, Book, Clock, BookX, FileText, Users, Tag, MessageCircle, Target } from "lucide-react";
+import { Share2, Download, Loader2 } from "lucide-react";
 import type { AnnualGoal } from "@/types/database";
 
 interface ShareDashboardProps {
@@ -66,25 +66,50 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
     setTimeout(generateImage, 100);
   };
 
-  const handleDownload = () => {
+  const getImageFile = async () => {
+    if (!generatedImage) return null;
+    const res = await fetch(generatedImage);
+    const blob = await res.blob();
+    return new File([blob], `babel-dashboard-${userName.toLowerCase().replace(/\s+/g, "-")}.png`, { type: "image/png" });
+  };
+
+  const handleDownload = async () => {
     if (!generatedImage) return;
 
+    // On mobile, use share API which has "Save Image" option
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile && navigator.share) {
+      try {
+        const file = await getImageFile();
+        if (file && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: "Salvar Dashboard Babel",
+          });
+          return;
+        }
+      } catch (error) {
+        // User cancelled or error, fall through to download
+      }
+    }
+
+    // Desktop or fallback: direct download
     const link = document.createElement("a");
     link.download = `babel-dashboard-${userName.toLowerCase().replace(/\s+/g, "-")}.png`;
     link.href = generatedImage;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   const handleShare = async () => {
     if (!generatedImage) return;
 
     try {
-      // Convert base64 to blob
-      const res = await fetch(generatedImage);
-      const blob = await res.blob();
-      const file = new File([blob], "babel-dashboard.png", { type: "image/png" });
+      const file = await getImageFile();
 
-      if (navigator.share && navigator.canShare({ files: [file] })) {
+      if (file && navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: "Meu Dashboard Babel",
@@ -96,7 +121,10 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
       }
     } catch (error) {
       console.error("Error sharing:", error);
-      handleDownload();
+      // Only download if not user cancellation
+      if ((error as Error).name !== "AbortError") {
+        handleDownload();
+      }
     }
   };
 
@@ -131,8 +159,8 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
               disabled={!generatedImage || isGenerating}
               className="flex-1 gap-2"
             >
-              <Instagram className="w-4 h-4" />
-              Compartilhar nos Stories
+              <Share2 className="w-4 h-4" />
+              Compartilhar
             </Button>
             <Button
               variant="outline"
@@ -141,12 +169,12 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
               className="gap-2"
             >
               <Download className="w-4 h-4" />
-              Baixar
+              Salvar
             </Button>
           </div>
 
           <p className="text-xs text-center text-muted-foreground">
-            A imagem será salva e você poderá compartilhar no Instagram Stories
+            Salve a imagem e compartilhe nos Stories do Instagram!
           </p>
         </div>
       </Modal>
