@@ -287,25 +287,22 @@ export function AdminNotifications() {
                       </p>
                     </div>
                     <div className="flex gap-1">
-                      {notification.status === "draft" && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(notification)}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openSendModal(notification)}
-                            className="text-green-600 hover:bg-green-50"
-                          >
-                            <Send className="w-4 h-4" />
-                          </Button>
-                        </>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(notification)}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openSendModal(notification)}
+                        className="text-green-600 hover:bg-green-50"
+                        title={notification.status === "sent" ? "Reenviar" : "Enviar"}
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
