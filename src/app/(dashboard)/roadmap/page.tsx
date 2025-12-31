@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
-import { Card, CardContent, Button, Textarea, Modal, Skeleton } from "@/components/ui";
-import { Map, BookOpen, Pencil, BookCheck, Plus, ThumbsUp, Send, Loader2 } from "lucide-react";
+import { Button, Textarea, Modal, Skeleton } from "@/components/ui";
+import { Sparkles, Clock, Flame, CheckCircle2, Plus, Heart, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface RoadmapItem {
@@ -24,26 +24,29 @@ const columns = [
   {
     id: "planned",
     title: "Próximos Capítulos",
-    icon: BookOpen,
-    color: "text-blue-700 dark:text-blue-400",
-    headerBg: "bg-blue-100 dark:bg-blue-900/40",
-    borderColor: "border-blue-300 dark:border-blue-700",
+    subtitle: "Em planejamento",
+    icon: Clock,
+    accentColor: "from-[#8B7355] to-[#A08468]",
+    pillBg: "bg-[#8B7355]/10",
+    pillText: "text-[#8B7355]",
   },
   {
     id: "in_progress",
-    title: "Escrevendo História",
-    icon: Pencil,
-    color: "text-amber-700 dark:text-amber-400",
-    headerBg: "bg-amber-100 dark:bg-amber-900/40",
-    borderColor: "border-amber-300 dark:border-amber-700",
+    title: "Escrevendo",
+    subtitle: "Em desenvolvimento",
+    icon: Flame,
+    accentColor: "from-[#C4956A] to-[#D4A574]",
+    pillBg: "bg-[#C4956A]/10",
+    pillText: "text-[#C4956A]",
   },
   {
     id: "completed",
-    title: "Livro Publicado",
-    icon: BookCheck,
-    color: "text-green-700 dark:text-green-400",
-    headerBg: "bg-green-100 dark:bg-green-900/40",
-    borderColor: "border-green-300 dark:border-green-700",
+    title: "Publicado",
+    subtitle: "Disponível para todos",
+    icon: CheckCircle2,
+    accentColor: "from-[#6B8E6B] to-[#7FA37F]",
+    pillBg: "bg-[#6B8E6B]/10",
+    pillText: "text-[#6B8E6B]",
   },
 ];
 
@@ -180,60 +183,66 @@ export default function RoadmapPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">
-            Roadmap do Babel
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Acompanhe o que estamos desenvolvendo e vote nas próximas funcionalidades
-          </p>
+      <div className="text-center space-y-3 pb-4">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+          <Sparkles className="w-4 h-4" />
+          Roadmap
         </div>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+          O Futuro do Babel
+        </h1>
+        <p className="text-muted-foreground max-w-xl mx-auto">
+          Acompanhe o que estamos construindo e vote nas funcionalidades que você mais deseja
+        </p>
         <Button 
           onClick={() => setShowSuggestionModal(true)}
-          className="bg-green-600 hover:bg-green-700 text-white"
+          variant="outline"
+          className="mt-2"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Sugestão
+          Enviar Sugestão
         </Button>
       </div>
 
-      {/* Columns - AbacatePay style */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Columns - Elegant style */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {columns.map((column) => {
           const Icon = column.icon;
           const columnItems = getItemsByStatus(column.id);
 
           return (
-            <div key={column.id} className="flex flex-col">
+            <div key={column.id} className="space-y-4">
               {/* Column Header */}
-              <div className={cn(
-                "flex items-center gap-2 p-4 rounded-t-xl border-2 border-b-0",
-                column.headerBg,
-                column.borderColor
-              )}>
-                <Icon className={cn("w-5 h-5", column.color)} />
-                <h2 className={cn("font-bold text-sm", column.color)}>
-                  {column.title}
-                </h2>
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white shadow-sm",
+                  column.accentColor
+                )}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="font-semibold text-foreground">
+                    {column.title}
+                  </h2>
+                  <p className="text-xs text-muted-foreground">{column.subtitle}</p>
+                </div>
                 <span className={cn(
-                  "ml-auto w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center",
-                  column.headerBg,
-                  column.color
+                  "px-2.5 py-1 rounded-full text-xs font-semibold",
+                  column.pillBg,
+                  column.pillText
                 )}>
                   {columnItems.length}
                 </span>
               </div>
 
               {/* Items Container */}
-              <div className={cn(
-                "flex-1 rounded-b-xl border-2 border-t-0 bg-card p-3 space-y-3 min-h-[200px]",
-                column.borderColor
-              )}>
+              <div className="space-y-3">
                 {columnItems.length === 0 ? (
-                  <p className="text-center text-muted-foreground text-sm py-8">
-                    Nenhum item ainda
-                  </p>
+                  <div className="rounded-2xl border-2 border-dashed border-muted-foreground/20 p-8 text-center">
+                    <p className="text-muted-foreground text-sm">
+                      Nenhum item ainda
+                    </p>
+                  </div>
                 ) : (
                   columnItems.map((item) => {
                     const hasVoted = userVotes.includes(item.id);
@@ -242,13 +251,19 @@ export default function RoadmapPage() {
                     return (
                       <div 
                         key={item.id} 
-                        className="bg-background rounded-xl border p-4 hover:shadow-md transition-shadow"
+                        className={cn(
+                          "group relative rounded-2xl border bg-card p-5 transition-all duration-200",
+                          "hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5",
+                          hasVoted && "ring-2 ring-primary/20"
+                        )}
                       >
-                        <div className="flex gap-3">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
+                        <div className="flex gap-4">
+                          <div className="flex-1 space-y-2">
+                            <h3 className="font-semibold text-foreground leading-tight">
+                              {item.title}
+                            </h3>
                             {item.description && (
-                              <p className="text-xs text-muted-foreground leading-relaxed">
+                              <p className="text-sm text-muted-foreground leading-relaxed">
                                 {item.description}
                               </p>
                             )}
@@ -257,18 +272,22 @@ export default function RoadmapPage() {
                             onClick={() => handleVote(item.id)}
                             disabled={isVoting}
                             className={cn(
-                              "flex flex-col items-center justify-center min-w-[60px] px-3 py-2 rounded-lg border-2 transition-all",
+                              "flex flex-col items-center justify-center gap-1 min-w-[52px] px-3 py-2 rounded-xl transition-all duration-200",
                               hasVoted
-                                ? "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-600"
-                                : "border-muted-foreground/20 hover:border-muted-foreground/40 text-muted-foreground"
+                                ? "bg-primary/10 text-primary"
+                                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                           >
                             {isVoting ? (
                               <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                              <ThumbsUp className={cn("w-5 h-5", hasVoted && "fill-green-500")} />
+                              <Heart className={cn(
+                                "w-5 h-5 transition-transform",
+                                hasVoted && "fill-primary scale-110",
+                                !hasVoted && "group-hover:scale-110"
+                              )} />
                             )}
-                            <span className="text-xs font-bold mt-1">{item.votes_count}</span>
+                            <span className="text-xs font-bold">{item.votes_count}</span>
                           </button>
                         </div>
                       </div>
@@ -285,21 +304,25 @@ export default function RoadmapPage() {
       <Modal
         isOpen={showSuggestionModal}
         onClose={() => setShowSuggestionModal(false)}
-        title="Enviar Sugestão"
+        title="💡 Envie sua ideia"
       >
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Sua sugestão será analisada pela nossa equipe. Se aprovada, ela aparecerá no roadmap.
-          </p>
+        <div className="space-y-5">
+          <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+            <p className="text-sm text-muted-foreground">
+              Adoramos ouvir nossos leitores! Sua sugestão será analisada pela nossa equipe e, 
+              se aprovada, entrará no nosso roadmap.
+            </p>
+          </div>
           <Textarea
-            placeholder="Descreva sua sugestão de funcionalidade..."
+            placeholder="Qual funcionalidade você gostaria de ver no Babel?"
             value={suggestionContent}
             onChange={(e) => setSuggestionContent(e.target.value)}
-            rows={4}
+            rows={5}
+            className="resize-none"
           />
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-3 justify-end">
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setShowSuggestionModal(false)}
             >
               Cancelar
@@ -316,7 +339,7 @@ export default function RoadmapPage() {
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Enviar
+                  Enviar Sugestão
                 </>
               )}
             </Button>
