@@ -41,7 +41,7 @@ export function BookForm({ book, mode }: BookFormProps) {
   const router = useRouter();
   const supabase = createClient();
   const { showToast } = useToast();
-  const { user, profile } = useUser();
+  const { user, profile, isLoading: isProfileLoading } = useUser();
 
   const [isLoading, setIsLoading] = useState(false);
   const [bookCount, setBookCount] = useState<number | null>(null);
@@ -98,8 +98,21 @@ export function BookForm({ book, mode }: BookFormProps) {
 
   const hasReachedLimit = !isPremium && bookCount !== null && bookCount >= FREE_BOOK_LIMIT;
 
-  // Mostrar tela de limite atingido
-  if (mode === "create" && !checkingLimit && hasReachedLimit) {
+  // Aguardar profile e contagem de livros carregarem antes de verificar limite
+  const isCheckingAccess = mode === "create" && (isProfileLoading || checkingLimit);
+
+  // Mostrar loading enquanto verifica acesso
+  if (isCheckingAccess) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="h-10 w-24 bg-muted animate-pulse rounded" />
+        <div className="h-64 bg-muted animate-pulse rounded-lg" />
+      </div>
+    );
+  }
+
+  // Mostrar tela de limite atingido (só após tudo carregar)
+  if (mode === "create" && hasReachedLimit) {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <Button variant="ghost" onClick={() => router.back()}>
