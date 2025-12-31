@@ -137,22 +137,25 @@ export default function RoadmapPage() {
 
         if (deleteError) throw deleteError;
 
-        // Update votes_count directly in the table
-        const currentItem = items.find((i) => i.id === itemId);
-        if (currentItem) {
-          await supabase
-            .from("roadmap_items")
-            .update({ votes_count: Math.max(0, currentItem.votes_count - 1) })
-            .eq("id", itemId);
-        }
+        // Count actual votes from database
+        const { count } = await supabase
+          .from("roadmap_votes")
+          .select("*", { count: "exact", head: true })
+          .eq("item_id", itemId);
+
+        const newCount = count ?? 0;
+
+        // Update votes_count with actual count
+        await supabase
+          .from("roadmap_items")
+          .update({ votes_count: newCount })
+          .eq("id", itemId);
 
         // Update local state
         setUserVotes((prev) => prev.filter((id) => id !== itemId));
         setItems((prev) =>
           prev.map((item) =>
-            item.id === itemId
-              ? { ...item, votes_count: Math.max(0, item.votes_count - 1) }
-              : item
+            item.id === itemId ? { ...item, votes_count: newCount } : item
           )
         );
       } else {
@@ -162,11 +165,13 @@ export default function RoadmapPage() {
           .select("id")
           .eq("user_id", user.id)
           .eq("item_id", itemId)
-          .single();
+          .maybeSingle();
 
         if (existingVote) {
           // Vote already exists, just update UI
-          setUserVotes((prev) => [...prev, itemId]);
+          setUserVotes((prev) => 
+            prev.includes(itemId) ? prev : [...prev, itemId]
+          );
           setVotingItemId(null);
           return;
         }
@@ -178,22 +183,27 @@ export default function RoadmapPage() {
 
         if (insertError) throw insertError;
 
-        // Update votes_count directly in the table
-        const currentItem = items.find((i) => i.id === itemId);
-        if (currentItem) {
-          await supabase
-            .from("roadmap_items")
-            .update({ votes_count: currentItem.votes_count + 1 })
-            .eq("id", itemId);
-        }
+        // Count actual votes from database
+        const { count } = await supabase
+          .from("roadmap_votes")
+          .select("*", { count: "exact", head: true })
+          .eq("item_id", itemId);
+
+        const newCount = count ?? 0;
+
+        // Update votes_count with actual count
+        await supabase
+          .from("roadmap_items")
+          .update({ votes_count: newCount })
+          .eq("id", itemId);
 
         // Update local state
-        setUserVotes((prev) => [...prev, itemId]);
+        setUserVotes((prev) => 
+          prev.includes(itemId) ? prev : [...prev, itemId]
+        );
         setItems((prev) =>
           prev.map((item) =>
-            item.id === itemId
-              ? { ...item, votes_count: item.votes_count + 1 }
-              : item
+            item.id === itemId ? { ...item, votes_count: newCount } : item
           )
         );
       }
