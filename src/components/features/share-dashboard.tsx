@@ -158,12 +158,12 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
           style={{
             width: 540,
             height: 960,
-            background: "linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)",
+            background: "linear-gradient(180deg, #f9f7f4 0%, #f2efe9 50%, #ebe6df 100%)",
             padding: 40,
             display: "flex",
             flexDirection: "column",
             fontFamily: "system-ui, -apple-system, sans-serif",
-            color: "white",
+            color: "#2a2725",
             position: "relative",
             overflow: "hidden",
           }}
@@ -177,7 +177,7 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
               width: 300,
               height: 300,
               borderRadius: "50%",
-              background: "rgba(139, 92, 246, 0.1)",
+              background: "rgba(160, 128, 80, 0.08)",
               filter: "blur(60px)",
             }}
           />
@@ -189,7 +189,7 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
               width: 200,
               height: 200,
               borderRadius: "50%",
-              background: "rgba(59, 130, 246, 0.1)",
+              background: "rgba(160, 128, 80, 0.06)",
               filter: "blur(40px)",
             }}
           />
@@ -197,7 +197,7 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
           {/* Logo */}
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
             <img
-              src="/logo.png"
+              src="/logo_cinza.png"
               alt="Babel"
               style={{ height: 48, objectFit: "contain" }}
               crossOrigin="anonymous"
@@ -206,10 +206,10 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
 
           {/* User name */}
           <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>
+            <p style={{ fontSize: 14, color: "#7a7570", marginBottom: 4 }}>
               Jornada de Leitura de
             </p>
-            <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: "#2a2725" }}>
               {userName}
             </h1>
           </div>
@@ -218,11 +218,11 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
           {goal && (
             <div
               style={{
-                background: "rgba(139, 92, 246, 0.15)",
+                background: "rgba(160, 128, 80, 0.1)",
                 borderRadius: 16,
                 padding: 20,
                 marginBottom: 24,
-                border: "1px solid rgba(139, 92, 246, 0.3)",
+                border: "1px solid rgba(160, 128, 80, 0.2)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -230,22 +230,22 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  background: "rgba(139, 92, 246, 0.3)",
+                  background: "rgba(160, 128, 80, 0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}>
                   <span style={{ fontSize: 16 }}>🎯</span>
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 600 }}>Meta {currentYear}</span>
+                <span style={{ fontSize: 16, fontWeight: 600, color: "#2a2725" }}>Meta {currentYear}</span>
               </div>
-              <p style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px 0" }}>
+              <p style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px 0", color: "#2a2725" }}>
                 {booksReadThisYear} de {goal.goal_amount} livros
               </p>
               <div
                 style={{
                   height: 8,
-                  background: "rgba(255,255,255,0.2)",
+                  background: "rgba(160, 128, 80, 0.15)",
                   borderRadius: 4,
                   overflow: "hidden",
                 }}
@@ -254,13 +254,13 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
                   style={{
                     height: "100%",
                     width: `${goalProgress}%`,
-                    background: "linear-gradient(90deg, #8b5cf6, #a78bfa)",
+                    background: "linear-gradient(90deg, #a08050, #c4a66a)",
                     borderRadius: 4,
                   }}
                 />
               </div>
               {goalProgress >= 100 && (
-                <p style={{ fontSize: 14, color: "#a78bfa", marginTop: 8 }}>
+                <p style={{ fontSize: 14, color: "#a08050", marginTop: 8 }}>
                   🎉 Meta atingida!
                 </p>
               )}
@@ -276,20 +276,20 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
               flex: 1,
             }}
           >
-            <StatBox icon="📖" label="Lidos" value={stats?.lido || 0} color="#22c55e" />
-            <StatBox icon="📚" label="Lendo" value={stats?.lendo || 0} color="#3b82f6" />
-            <StatBox icon="⏳" label="Quero ler" value={stats?.nao_comecou || 0} color="#6b7280" />
-            <StatBox icon="📄" label="Páginas" value={stats?.total_paginas_lidas.toLocaleString("pt-BR") || "0"} color="#a855f7" />
-            <StatBox icon="✍️" label="Autores" value={stats?.autores_unicos || 0} color="#f97316" />
-            <StatBox icon="🏷️" label="Gêneros" value={stats?.generos_unicos || 0} color="#ec4899" />
+            <StatBox icon="📖" label="Lidos" value={stats?.lido || 0} color="#5a8a5a" />
+            <StatBox icon="📚" label="Lendo" value={stats?.lendo || 0} color="#a08050" />
+            <StatBox icon="⏳" label="Quero ler" value={stats?.nao_comecou || 0} color="#8a8580" />
+            <StatBox icon="📄" label="Páginas" value={stats?.total_paginas_lidas.toLocaleString("pt-BR") || "0"} color="#8a6a9a" />
+            <StatBox icon="✍️" label="Autores" value={stats?.autores_unicos || 0} color="#b07040" />
+            <StatBox icon="🏷️" label="Gêneros" value={stats?.generos_unicos || 0} color="#a06080" />
           </div>
 
           {/* Footer with Instagram handle */}
           <div style={{ textAlign: "center", marginTop: 32 }}>
-            <p style={{ fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+            <p style={{ fontSize: 18, fontWeight: 600, color: "#2a2725" }}>
               @babelbookshelf
             </p>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>
+            <p style={{ fontSize: 12, color: "#7a7570", marginTop: 4 }}>
               Acompanhe sua leitura no Babel 📚
             </p>
           </div>
@@ -303,10 +303,11 @@ function StatBox({ icon, label, value, color }: { icon: string; label: string; v
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.05)",
+        background: "rgba(255, 255, 255, 0.7)",
         borderRadius: 12,
         padding: 16,
-        border: "1px solid rgba(255,255,255,0.1)",
+        border: "1px solid rgba(42, 39, 37, 0.08)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
       }}
     >
       <div
@@ -314,7 +315,7 @@ function StatBox({ icon, label, value, color }: { icon: string; label: string; v
           width: 36,
           height: 36,
           borderRadius: 8,
-          background: `${color}20`,
+          background: `${color}15`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -324,8 +325,8 @@ function StatBox({ icon, label, value, color }: { icon: string; label: string; v
       >
         {icon}
       </div>
-      <p style={{ fontSize: 24, fontWeight: 700, margin: 0, color: "white" }}>{value}</p>
-      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", margin: 0 }}>{label}</p>
+      <p style={{ fontSize: 24, fontWeight: 700, margin: 0, color: "#2a2725" }}>{value}</p>
+      <p style={{ fontSize: 12, color: "#7a7570", margin: 0 }}>{label}</p>
     </div>
   );
 }
