@@ -18,8 +18,7 @@ import {
   Button,
   Input,
 } from "@/components/ui";
-import { User, Sun, Moon, LogOut, Save, Shield, Calendar, Camera, AtSign } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { User, Sun, Moon, LogOut, Save, Camera, AtSign } from "lucide-react";
 
 export default function ConfiguracoesPage() {
   const { profile, refetch } = useUser();
@@ -110,21 +109,6 @@ export default function ConfiguracoesPage() {
     router.push("/login");
     router.refresh();
   };
-
-  const planNames: Record<string, string> = {
-    mensal: "Mensal (1 mês)",
-    trimestral: "Trimestral (3 meses)",
-    semestral: "Semestral (6 meses)",
-    anual: "Anual (12 meses)",
-    // Legacy plans
-    explorer: "Explorador de Páginas (3 meses)",
-    traveler: "Viajante de Histórias (6 meses)",
-    devourer: "Devorador de Mundos (12 meses)",
-  };
-
-  const isSubscriptionActive = profile?.subscription_expires_at
-    ? new Date(profile.subscription_expires_at) > new Date()
-    : false;
 
   // Get initials for avatar fallback
   const getInitials = (name: string | null | undefined) => {
@@ -233,67 +217,6 @@ export default function ConfiguracoesPage() {
             <Save className="w-4 h-4 mr-2" />
             {isUploadingAvatar ? "Enviando foto..." : "Salvar alterações"}
           </Button>
-        </CardContent>
-      </Card>
-
-      {/* Subscription */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-primary" />
-            Assinatura
-          </CardTitle>
-          <CardDescription>Detalhes do seu plano</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 rounded-lg bg-muted/50 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Status</span>
-              <span
-                className={`text-sm font-medium ${
-                  isSubscriptionActive ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {isSubscriptionActive ? "Ativo" : "Inativo"}
-              </span>
-            </div>
-
-            {profile?.plan && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Plano</span>
-                <span className="text-sm font-medium">
-                  {planNames[profile.plan]}
-                </span>
-              </div>
-            )}
-
-            {profile?.subscription_expires_at && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {isSubscriptionActive ? "Expira em" : "Expirou em"}
-                </span>
-                <span className="text-sm font-medium">
-                  {formatDate(profile.subscription_expires_at)}
-                </span>
-              </div>
-            )}
-
-            {profile?.is_admin && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Tipo</span>
-                <span className="text-sm font-medium text-primary">
-                  Administrador
-                </span>
-              </div>
-            )}
-          </div>
-
-          {!isSubscriptionActive && !profile?.is_admin && (
-            <p className="text-sm text-muted-foreground">
-              Entre em contato para renovar sua assinatura.
-            </p>
-          )}
         </CardContent>
       </Card>
 
