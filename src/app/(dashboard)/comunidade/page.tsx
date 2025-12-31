@@ -74,8 +74,8 @@ export default function ComunidadePage() {
     fetchPosts();
   }, [fetchPosts]);
 
-  // Mostrar loading enquanto profile carrega
-  if (profileLoading) {
+  // Mostrar loading enquanto profile carrega (profileLoading ou profile ainda não existe)
+  if (profileLoading || !profile) {
     return (
       <div className="max-w-2xl mx-auto space-y-4 p-4">
         <Skeleton className="h-14 w-full" />
