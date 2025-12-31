@@ -101,7 +101,7 @@ export default function DashboardPage() {
     try {
       const { data } = await supabase
         .from("community_posts")
-        .select("*, books(nome_do_livro, autor, cover_url)")
+        .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       
@@ -556,33 +556,30 @@ function PostsList({ posts }: { posts: CommunityPost[] }) {
 
   return (
     <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-      {posts.map((post) => {
-        const book = post.books as { nome_do_livro: string; autor: string; cover_url: string | null } | null;
-        return (
-          <Link 
-            key={post.id} 
-            href={`/social?post=${post.id}`}
-            className="block p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-          >
-            <div className="flex gap-3">
-              {book?.cover_url ? (
-                <img src={book.cover_url} alt={book.nome_do_livro} className="w-10 h-14 object-cover rounded flex-shrink-0" />
-              ) : (
-                <div className="w-10 h-14 bg-muted rounded flex items-center justify-center flex-shrink-0">
-                  <Book className="w-5 h-5 text-muted-foreground" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{book?.nome_do_livro || "Livro"}</p>
-                <p className="text-sm text-muted-foreground line-clamp-2">{post.content}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(post.created_at).toLocaleDateString("pt-BR")}
-                </p>
+      {posts.map((post) => (
+        <Link 
+          key={post.id} 
+          href={`/social?post=${post.id}`}
+          className="block p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+        >
+          <div className="flex gap-3">
+            {post.book_cover_url ? (
+              <img src={post.book_cover_url} alt={post.book_title || "Livro"} className="w-10 h-14 object-cover rounded flex-shrink-0" />
+            ) : (
+              <div className="w-10 h-14 bg-muted rounded flex items-center justify-center flex-shrink-0">
+                <Book className="w-5 h-5 text-muted-foreground" />
               </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-medium truncate">{post.book_title || "Livro"}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2">{post.content}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {new Date(post.created_at).toLocaleDateString("pt-BR")}
+              </p>
             </div>
-          </Link>
-        );
-      })}
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }
