@@ -50,8 +50,13 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
         height: 960,
       });
 
-      const dataUrl = canvas.toDataURL("image/png", 1.0);
-      setGeneratedImage(dataUrl);
+      // Convert to blob URL instead of data URL to avoid iOS issues
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const blobUrl = URL.createObjectURL(blob);
+          setGeneratedImage(blobUrl);
+        }
+      }, "image/png", 1.0);
     } catch (error) {
       console.error("Error generating image:", error);
     } finally {
@@ -60,18 +65,35 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
   }, []);
 
   const handleOpen = () => {
+    // Revoke previous blob URL to avoid memory leak
+    if (generatedImage) {
+      URL.revokeObjectURL(generatedImage);
+    }
     setIsOpen(true);
     setGeneratedImage(null);
     // Generate after modal opens
     setTimeout(generateImage, 100);
   };
 
-  const getImageFile = async () => {
-    if (!generatedImage) return null;
-    const res = await fetch(generatedImage);
-    const blob = await res.blob();
-    return new File([blob], `babel-dashboard-${userName.toLowerCase().replace(/\s+/g, "-")}.png`, { type: "image/png" });
+  const handleClose = () => {
+    setIsOpen(false);
+    // Clean up blob URL when closing
+    if (generatedImage) {
+      URL.revokeObjectURL(generatedImage);
+      setGeneratedImage(null);
+    }
   };
+
+  const getImageFile = useCallback(async () => {
+    if (!generatedImage) return null;
+    try {
+      const res = await fetch(generatedImage);
+      const blob = await res.blob();
+      return new File([blob], `babel-dashboard-${userName.toLowerCase().replace(/\s+/g, "-")}.png`, { type: "image/png" });
+    } catch {
+      return null;
+    }
+  }, [generatedImage, userName]);
 
   const handleDownload = async () => {
     if (!generatedImage) return;
@@ -135,7 +157,7 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
         Compartilhar
       </Button>
 
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Compartilhar Dashboard">
+      <Modal isOpen={isOpen} onClose={handleClose} title="Compartilhar Dashboard">
         <div className="space-y-4">
           {/* Preview container */}
           <div className="flex justify-center">
