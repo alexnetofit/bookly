@@ -9,9 +9,16 @@ import { CheckCircle, Loader2, BookOpen, ArrowRight } from "lucide-react";
 export default function SucessoPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const upgraded = searchParams.get("upgraded");
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
 
   useEffect(() => {
+    // Se é upgrade, sucesso imediato
+    if (upgraded === "true") {
+      setStatus("success");
+      return;
+    }
+
     // Simular verificação do pagamento
     // Na prática, o webhook já terá processado o pagamento
     const timer = setTimeout(() => {
@@ -23,7 +30,7 @@ export default function SucessoPage() {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [sessionId]);
+  }, [sessionId, upgraded]);
 
   if (status === "loading") {
     return (
@@ -70,9 +77,14 @@ export default function SucessoPage() {
           </div>
           
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold">Pagamento Confirmado! 🎉</h1>
+            <h1 className="text-2xl font-bold">
+              {upgraded === "true" ? "Plano Atualizado! 🎉" : "Pagamento Confirmado! 🎉"}
+            </h1>
             <p className="text-muted-foreground">
-              Seu plano premium foi ativado com sucesso. Agora você pode adicionar livros ilimitados!
+              {upgraded === "true" 
+                ? "Seu plano foi atualizado com sucesso. A diferença de valor foi cobrada proporcionalmente."
+                : "Seu plano premium foi ativado com sucesso. Agora você pode adicionar livros ilimitados!"
+              }
             </p>
           </div>
 

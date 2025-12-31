@@ -52,7 +52,9 @@ export async function POST(request: Request) {
     );
   }
 
-  // Processar evento
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // Processar evento checkout.session.completed (nova assinatura)
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     
@@ -67,18 +69,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabaseAdmin = getSupabaseAdmin();
-
     // Calcular data de expiração
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + (PLAN_DURATIONS[plan] || 3));
 
-    // Atualizar plano do usuário
+    // Salvar subscription_id e customer_id para futuros upgrades/downgrades
     const { error: updateError } = await supabaseAdmin
       .from("users_profile")
       .update({
         plan: plan,
         subscription_expires_at: expiresAt.toISOString(),
+        stripe_customer_id: session.customer as string,
+        stripe_subscription_id: session.subscription as string,
       })
       .eq("id", userId);
 
@@ -91,6 +93,52 @@ export async function POST(request: Request) {
     }
 
     console.log(`Subscription activated: user=${userId}, plan=${plan}, expires=${expiresAt.toISOString()}`);
+  }
+
+  // Processar reembolso (charge.refunded)
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object as Stripe.Charge;
+    const customerEmail = charge.billing_details?.email || charge.receipt_email;
+
+    if (customerEmail) {
+      // Buscar usuário pelo email e reverter para plano grátis
+      const { error: updateError } = await supabaseAdmin
+        .from("users_profile")
+        .update({
+          plan: "free",
+          subscription_expires_at: null,
+          stripe_subscription_id: null,
+        })
+        .eq("email", customerEmail);
+
+      if (updateError) {
+        console.error("Error reverting user plan on refund:", updateError);
+      } else {
+        console.log(`Plan reverted to free for: ${customerEmail}`);
+      }
+    }
+  }
+
+  // Processar cancelamento de subscription
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription;
+    const subscriptionId = subscription.id;
+
+    // Buscar usuário pela subscription_id e reverter para plano grátis
+    const { error: updateError } = await supabaseAdmin
+      .from("users_profile")
+      .update({
+        plan: "free",
+        subscription_expires_at: null,
+        stripe_subscription_id: null,
+      })
+      .eq("stripe_subscription_id", subscriptionId);
+
+    if (updateError) {
+      console.error("Error reverting user plan on subscription delete:", updateError);
+    } else {
+      console.log(`Plan reverted to free for subscription: ${subscriptionId}`);
+    }
   }
 
   return NextResponse.json({ received: true });

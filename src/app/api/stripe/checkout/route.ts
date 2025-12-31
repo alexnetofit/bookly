@@ -50,13 +50,77 @@ export async function POST(request: Request) {
     }
 
     const priceId = PRICE_IDS[plan as keyof typeof PRICE_IDS];
-
-    // Criar sessão de checkout
     const stripe = getStripe();
-    const session = await stripe.checkout.sessions.create({
+
+    // Buscar profile para verificar subscription existente
+    const { data: profile } = await supabase
+      .from("users_profile")
+      .select("stripe_customer_id, stripe_subscription_id")
+      .eq("id", user.id)
+      .single();
+
+    // Se usuário já tem subscription ativa, fazer upgrade/downgrade com pro rata
+    if (profile?.stripe_subscription_id) {
+      try {
+        // Buscar subscription atual
+        const currentSubscription = await stripe.subscriptions.retrieve(
+          profile.stripe_subscription_id
+        );
+
+        if (currentSubscription.status === "active") {
+          // Fazer upgrade/downgrade com proration
+          const updatedSubscription = await stripe.subscriptions.update(
+            profile.stripe_subscription_id,
+            {
+              items: [
+                {
+                  id: currentSubscription.items.data[0].id,
+                  price: priceId,
+                },
+              ],
+              proration_behavior: "create_prorations",
+              metadata: {
+                user_id: user.id,
+                plan: plan,
+              },
+            }
+          );
+
+          // Atualizar plano no Supabase imediatamente
+          const PLAN_DURATIONS: Record<string, number> = {
+            explorer: 3,
+            traveler: 6,
+            devourer: 12,
+          };
+          
+          const expiresAt = new Date();
+          expiresAt.setMonth(expiresAt.getMonth() + (PLAN_DURATIONS[plan] || 3));
+
+          await supabase
+            .from("users_profile")
+            .update({
+              plan: plan,
+              subscription_expires_at: expiresAt.toISOString(),
+            })
+            .eq("id", user.id);
+
+          // Retornar URL de sucesso direto (sem checkout)
+          return NextResponse.json({ 
+            url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.babelbookshelf.com"}/planos/sucesso?upgraded=true`,
+            upgraded: true,
+            subscriptionId: updatedSubscription.id,
+          });
+        }
+      } catch (subError) {
+        // Se der erro ao buscar subscription, criar nova
+        console.log("Subscription anterior não encontrada, criando nova...");
+      }
+    }
+
+    // Criar sessão de checkout para nova subscription
+    const sessionOptions: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
       mode: "subscription",
-      customer_email: user.email,
       line_items: [
         {
           price: priceId,
@@ -75,7 +139,16 @@ export async function POST(request: Request) {
       },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.babelbookshelf.com"}/planos/sucesso?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "https://app.babelbookshelf.com"}/planos`,
-    });
+    };
+
+    // Se já tem customer, usar o mesmo
+    if (profile?.stripe_customer_id) {
+      sessionOptions.customer = profile.stripe_customer_id;
+    } else {
+      sessionOptions.customer_email = user.email;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionOptions);
 
     return NextResponse.json({ url: session.url });
   } catch (error: unknown) {

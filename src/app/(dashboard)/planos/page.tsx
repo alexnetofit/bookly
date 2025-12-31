@@ -1,10 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@/hooks/useUser";
 import { Card, CardContent, Button, Skeleton } from "@/components/ui";
-import { Check, Sparkles, Rocket, Crown, Loader2 } from "lucide-react";
+import { Check, Sparkles, Rocket, Crown, Loader2, Receipt, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+interface Invoice {
+  id: string;
+  number: string | null;
+  amount: number;
+  currency: string;
+  status: string | null;
+  created: number;
+  invoice_pdf: string | null;
+  hosted_invoice_url: string | null;
+}
 
 const plans = [
   {
@@ -96,11 +107,35 @@ const plans = [
 export default function PlanosPage() {
   const { profile, isLoading: profileLoading } = useUser();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
 
   const currentPlan = profile?.plan || "free";
   const isSubscriptionActive = profile?.subscription_expires_at 
     ? new Date(profile.subscription_expires_at) > new Date() 
     : false;
+
+  // Buscar histórico de faturas
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      setLoadingInvoices(true);
+      try {
+        const response = await fetch("/api/stripe/invoices");
+        const data = await response.json();
+        if (data.invoices) {
+          setInvoices(data.invoices);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar faturas:", error);
+      } finally {
+        setLoadingInvoices(false);
+      }
+    };
+
+    if (profile) {
+      fetchInvoices();
+    }
+  }, [profile]);
 
   // Mostrar loading enquanto profile carrega
   if (profileLoading || !profile) {
@@ -268,6 +303,81 @@ export default function PlanosPage() {
           );
         })}
       </div>
+
+      {/* Histórico de Faturas */}
+      {(invoices.length > 0 || loadingInvoices) && (
+        <div className="max-w-3xl mx-auto">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Receipt className="w-5 h-5 text-muted-foreground" />
+                <h2 className="text-lg font-semibold">Histórico de Faturas</h2>
+              </div>
+
+              {loadingInvoices ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {invoices.map((invoice) => (
+                    <div
+                      key={invoice.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <p className="font-medium text-sm">
+                            {invoice.number || "Fatura"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(invoice.created * 1000).toLocaleDateString("pt-BR", {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="font-semibold">
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: invoice.currency.toUpperCase(),
+                            }).format(invoice.amount)}
+                          </p>
+                          <p className={cn(
+                            "text-xs capitalize",
+                            invoice.status === "paid" ? "text-green-600" : "text-muted-foreground"
+                          )}>
+                            {invoice.status === "paid" ? "Pago" : invoice.status}
+                          </p>
+                        </div>
+
+                        {invoice.hosted_invoice_url && (
+                          <a
+                            href={invoice.hosted_invoice_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            title="Ver fatura"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* FAQ or Info */}
       <div className="text-center text-sm text-muted-foreground max-w-2xl mx-auto">

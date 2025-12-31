@@ -31,6 +31,8 @@ export interface UserProfile {
   avatar_url: string | null;
   plan: PlanType;
   subscription_expires_at: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
   is_admin: boolean;
   preferred_sort: string | null;
   created_at: string;
