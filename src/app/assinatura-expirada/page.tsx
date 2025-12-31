@@ -7,12 +7,14 @@ import { createClient } from "@/lib/supabase/client";
 import { Button, Card, CardContent } from "@/components/ui";
 import { Clock, LogOut, Crown } from "lucide-react";
 import Link from "next/link";
+import { clearAllCaches } from "@/lib/cache";
 
 export default function AssinaturaExpiradaPage() {
   const router = useRouter();
   const supabase = createClient();
 
   const handleLogout = async () => {
+    clearAllCaches();
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();

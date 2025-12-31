@@ -6,6 +6,7 @@ import { useTheme } from "@/components/providers/theme-provider";
 import { useUser } from "@/hooks/useUser";
 import { Button, Skeleton } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { clearAllCaches } from "@/lib/cache";
 import {
   Sun,
   Moon,
@@ -41,6 +42,7 @@ export function Header({ onMenuClick, isSidebarCollapsed }: HeaderProps) {
   }, []);
 
   const handleLogout = async () => {
+    clearAllCaches();
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();

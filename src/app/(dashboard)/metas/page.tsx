@@ -18,6 +18,7 @@ import {
 } from "@/components/ui";
 import type { AnnualGoal } from "@/types/database";
 import { Target, Trophy, Edit2, Check, X, BookOpen, TrendingUp, History, CheckCircle2, XCircle } from "lucide-react";
+import { getMetasCache, setMetasCache, invalidateMetasCache } from "@/lib/cache";
 
 interface YearData {
   goal: AnnualGoal | null;
@@ -34,40 +35,30 @@ interface HistoryYear {
   achieved: boolean;
 }
 
-// Cache em memória para metas (persiste entre navegações)
-interface MetasCache {
-  yearData: Record<number, Omit<YearData, "isEditing" | "newGoalAmount" | "isSaving">>;
-  history: HistoryYear[];
-  timestamp: number;
-}
-
-let metasCache: MetasCache | null = null;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-
 export default function MetasPage() {
   const { user } = useUser();
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
 
-  // Inicializa com cache se disponível e válido
-  const isCacheValid = metasCache && (Date.now() - metasCache.timestamp) < CACHE_TTL;
+  // Inicializa com cache se disponível e válido para o usuário atual
+  const cachedData = user ? getMetasCache(user.id) : null;
   
-  const [isLoading, setIsLoading] = useState(!isCacheValid);
-  const [history, setHistory] = useState<HistoryYear[]>(isCacheValid ? metasCache!.history : []);
+  const [isLoading, setIsLoading] = useState(!cachedData);
+  const [history, setHistory] = useState<HistoryYear[]>(cachedData?.history ?? []);
   
   const [yearData, setYearData] = useState<Record<number, YearData>>(() => {
-    if (isCacheValid && metasCache) {
+    if (cachedData) {
       return {
         [currentYear]: { 
-          ...metasCache.yearData[currentYear], 
+          ...cachedData.yearData[currentYear], 
           isEditing: false, 
-          newGoalAmount: metasCache.yearData[currentYear]?.goal?.goal_amount.toString() || "",
+          newGoalAmount: cachedData.yearData[currentYear]?.goal?.goal_amount.toString() || "",
           isSaving: false 
         },
         [nextYear]: { 
-          ...metasCache.yearData[nextYear], 
+          ...cachedData.yearData[nextYear], 
           isEditing: false, 
-          newGoalAmount: metasCache.yearData[nextYear]?.goal?.goal_amount.toString() || "",
+          newGoalAmount: cachedData.yearData[nextYear]?.goal?.goal_amount.toString() || "",
           isSaving: false 
         },
       };
@@ -84,8 +75,9 @@ export default function MetasPage() {
   const fetchData = useCallback(async (forceRefresh = false) => {
     if (!user) return;
     
-    // Se cache válido e não é refresh forçado, não busca
-    if (!forceRefresh && metasCache && (Date.now() - metasCache.timestamp) < CACHE_TTL) {
+    // Se cache válido para este usuário e não é refresh forçado, não busca
+    const existingCache = getMetasCache(user.id);
+    if (!forceRefresh && existingCache) {
       return;
     }
     
@@ -167,15 +159,15 @@ export default function MetasPage() {
 
       setHistory(historyData);
 
-      // Salva no cache
-      metasCache = {
+      // Salva no cache com userId
+      setMetasCache({
+        userId: user.id,
         yearData: {
           [currentYear]: { goal: currentYearGoal, booksRead: currentYearCount || 0 },
           [nextYear]: { goal: nextYearGoal, booksRead: nextYearCount || 0 },
         },
         history: historyData,
-        timestamp: Date.now(),
-      };
+      });
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -228,7 +220,7 @@ export default function MetasPage() {
       updateYearData(year, { isEditing: false });
       
       // Invalida o cache e força refresh
-      metasCache = null;
+      invalidateMetasCache();
       fetchData(true);
     } catch (error) {
       console.error("Error saving goal:", error);

@@ -23,7 +23,7 @@ import {
 import type { Book, ReadingStatus, BookFormat } from "@/types/database";
 import { ArrowLeft, Edit, Trash2, Calendar, BookOpen, FileText, BookMarked, Headphones, Smartphone } from "lucide-react";
 import { formatDate } from "@/lib/utils";
-import { invalidateDashboardCache } from "@/app/(dashboard)/dashboard/page";
+import { invalidateBookRelatedCaches } from "@/lib/cache";
 
 const statusConfig: Record<ReadingStatus, { label: string; variant: "reading" | "read" | "not-started" | "abandoned" }> = {
   lendo: { label: "Lendo", variant: "reading" },
@@ -82,7 +82,7 @@ export default function BookDetailPage() {
       const { error } = await supabase.from("books").delete().eq("id", book.id);
       if (error) throw error;
 
-      invalidateDashboardCache();
+      invalidateBookRelatedCaches();
       showToast("Livro removido com sucesso", "success");
       router.push("/estante");
     } catch (error) {
@@ -119,7 +119,7 @@ export default function BookDetailPage() {
 
       if (error) throw error;
 
-      invalidateDashboardCache();
+      invalidateBookRelatedCaches();
       showToast("Progresso atualizado!", "success");
       setShowProgressModal(false);
       fetchBook();

@@ -10,6 +10,7 @@ import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp
 import Link from "next/link";
 import type { Book as BookType, AnnualGoal, CommunityPost } from "@/types/database";
 import { ShareDashboard } from "@/components/features/share-dashboard";
+import { getDashboardCache, setDashboardCache } from "@/lib/cache";
 
 type ModalType = "lidos" | "lendo" | "quero_ler" | "abandonados" | "paginas" | "autores" | "generos" | "posts" | null;
 
@@ -30,45 +31,28 @@ interface AuthorRanking {
   count: number;
 }
 
-// Cache em memória para dashboard (persiste entre navegações)
-interface DashboardCache {
-  stats: BookStats | null;
-  goal: AnnualGoal | null;
-  topAuthors: AuthorRanking[];
-  allBooks: BookType[];
-  allPosts: CommunityPost[];
-  timestamp: number;
-}
-
-let dashboardCache: DashboardCache | null = null;
-const CACHE_TTL = 2 * 60 * 1000; // 2 minutos (dashboard muda mais frequentemente)
-
-// Função para invalidar cache externamente (pode ser chamada de outras páginas)
-export function invalidateDashboardCache() {
-  dashboardCache = null;
-}
-
 export default function DashboardPage() {
   const { user, profile } = useUser();
   const currentYear = new Date().getFullYear();
   
-  // Inicializa com cache se disponível e válido
-  const isCacheValid = dashboardCache && (Date.now() - dashboardCache.timestamp) < CACHE_TTL;
+  // Inicializa com cache se disponível e válido para o usuário atual
+  const cachedData = user ? getDashboardCache(user.id) : null;
   
-  const [stats, setStats] = useState<BookStats | null>(isCacheValid ? dashboardCache!.stats : null);
-  const [goal, setGoal] = useState<AnnualGoal | null>(isCacheValid ? dashboardCache!.goal : null);
-  const [topAuthors, setTopAuthors] = useState<AuthorRanking[]>(isCacheValid ? dashboardCache!.topAuthors : []);
-  const [isLoading, setIsLoading] = useState(!isCacheValid);
+  const [stats, setStats] = useState<BookStats | null>(cachedData?.stats ?? null);
+  const [goal, setGoal] = useState<AnnualGoal | null>(cachedData?.goal ?? null);
+  const [topAuthors, setTopAuthors] = useState<AuthorRanking[]>(cachedData?.topAuthors ?? []);
+  const [isLoading, setIsLoading] = useState(!cachedData);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const [allBooks, setAllBooks] = useState<BookType[]>(isCacheValid ? dashboardCache!.allBooks : []);
-  const [allPosts, setAllPosts] = useState<CommunityPost[]>(isCacheValid ? dashboardCache!.allPosts : []);
+  const [allBooks, setAllBooks] = useState<BookType[]>(cachedData?.allBooks ?? []);
+  const [allPosts, setAllPosts] = useState<CommunityPost[]>(cachedData?.allPosts ?? []);
   const supabase = createClient();
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return;
     
-    // Se cache válido, não busca novamente
-    if (dashboardCache && (Date.now() - dashboardCache.timestamp) < CACHE_TTL) {
+    // Se cache válido para este usuário, não busca novamente
+    const existingCache = getDashboardCache(user.id);
+    if (existingCache) {
       return;
     }
     
@@ -147,15 +131,15 @@ export default function DashboardPage() {
         setGoal(goalData);
       }
 
-      // Salva no cache
-      dashboardCache = {
+      // Salva no cache com userId
+      setDashboardCache({
+        userId: user.id,
         stats: statsData,
         goal: goalData || null,
         topAuthors: ranking,
         allBooks: books,
         allPosts: posts,
-        timestamp: Date.now(),
-      };
+      });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {

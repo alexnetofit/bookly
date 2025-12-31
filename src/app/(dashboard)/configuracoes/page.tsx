@@ -19,6 +19,7 @@ import {
   Input,
 } from "@/components/ui";
 import { User, Sun, Moon, LogOut, Save, Camera, AtSign } from "lucide-react";
+import { clearAllCaches } from "@/lib/cache";
 
 export default function ConfiguracoesPage() {
   const { profile, refetch } = useUser();
@@ -105,6 +106,7 @@ export default function ConfiguracoesPage() {
   };
 
   const handleLogout = async () => {
+    clearAllCaches();
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();

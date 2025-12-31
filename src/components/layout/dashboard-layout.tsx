@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
+import { clearAllCaches } from "@/lib/cache";
 import { Sun, Moon, User, Settings, LogOut, CreditCard } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -41,6 +42,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, []);
 
   const handleLogout = async () => {
+    clearAllCaches();
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
