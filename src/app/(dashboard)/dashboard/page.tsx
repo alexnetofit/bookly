@@ -152,7 +152,7 @@ export default function DashboardPage() {
               generos_unicos: dashboardData?.unique_genres || 0,
               total_posts: stats.total_posts,
             } : null} 
-            goal={goal} 
+            goal={goal ?? null} 
             userName={profile?.full_name?.split(" ")[0] || "Leitor"} 
           />
           <Link href="/estante/novo">
