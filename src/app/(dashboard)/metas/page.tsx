@@ -16,13 +16,13 @@ import {
   Input,
   Skeleton,
 } from "@/components/ui";
-import type { AnnualGoal } from "@/types/database";
+import type { AnnualGoal, YearlyReadingStats } from "@/types/database";
 import { Target, Trophy, Edit2, Check, X, BookOpen, TrendingUp, History, CheckCircle2, XCircle } from "lucide-react";
 import { getMetasCache, setMetasCache, invalidateMetasCache, invalidateDashboardCache } from "@/lib/cache";
 
 interface YearData {
   goal: AnnualGoal | null;
-  booksRead: number;
+  yearly: YearlyReadingStats | null;
   isEditing: boolean;
   newGoalAmount: string;
   isSaving: boolean;
@@ -40,23 +40,25 @@ export default function MetasPage() {
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
 
-  // Inicializa com cache se disponível e válido para o usuário atual
+  // Inicializa com cache se disponível
   const cachedData = user ? getMetasCache(user.id) : null;
   
   const [isLoading, setIsLoading] = useState(!cachedData);
-  const [history, setHistory] = useState<HistoryYear[]>(cachedData?.history ?? []);
+  const [history, setHistory] = useState<HistoryYear[]>([]);
   
   const [yearData, setYearData] = useState<Record<number, YearData>>(() => {
     if (cachedData) {
       return {
         [currentYear]: { 
-          ...cachedData.yearData[currentYear], 
+          goal: cachedData.yearData[currentYear]?.goal || null,
+          yearly: cachedData.yearData[currentYear]?.yearly || null,
           isEditing: false, 
           newGoalAmount: cachedData.yearData[currentYear]?.goal?.goal_amount.toString() || "",
           isSaving: false 
         },
         [nextYear]: { 
-          ...cachedData.yearData[nextYear], 
+          goal: cachedData.yearData[nextYear]?.goal || null,
+          yearly: cachedData.yearData[nextYear]?.yearly || null,
           isEditing: false, 
           newGoalAmount: cachedData.yearData[nextYear]?.goal?.goal_amount.toString() || "",
           isSaving: false 
@@ -64,8 +66,8 @@ export default function MetasPage() {
       };
     }
     return {
-      [currentYear]: { goal: null, booksRead: 0, isEditing: false, newGoalAmount: "", isSaving: false },
-      [nextYear]: { goal: null, booksRead: 0, isEditing: false, newGoalAmount: "", isSaving: false },
+      [currentYear]: { goal: null, yearly: null, isEditing: false, newGoalAmount: "", isSaving: false },
+      [nextYear]: { goal: null, yearly: null, isEditing: false, newGoalAmount: "", isSaving: false },
     };
   });
 
@@ -75,57 +77,64 @@ export default function MetasPage() {
   const fetchData = useCallback(async (forceRefresh = false) => {
     if (!user) return;
     
-    // Se cache válido para este usuário e não é refresh forçado, não busca
+    // Se cache válido e não é refresh forçado, usa cache
     const existingCache = getMetasCache(user.id);
     if (!forceRefresh && existingCache) {
+      // Reconstrói histórico do cache
+      const historyData: HistoryYear[] = [];
+      for (const stats of existingCache.allYearlyStats) {
+        if (stats.year < currentYear) {
+          const goal = existingCache.allGoals.find(g => g.year === stats.year);
+          if (goal) {
+            historyData.push({
+              year: stats.year,
+              goal: goal.goal_amount,
+              booksRead: stats.books_read,
+              achieved: stats.books_read >= goal.goal_amount,
+            });
+          }
+        }
+      }
+      setHistory(historyData.sort((a, b) => b.year - a.year));
       return;
     }
     
     setIsLoading(true);
     try {
-      // Fetch all goals for user
+      // Busca todas as metas do usuário (1 query)
       const { data: allGoals } = await supabase
         .from("annual_goals")
         .select("*")
         .eq("user_id", user.id)
         .order("year", { ascending: false });
 
-      // Fetch books read for current year
-      const startOfCurrentYear = new Date(currentYear, 0, 1).toISOString();
-      const endOfCurrentYear = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
-      const { count: currentYearCount } = await supabase
-        .from("books")
-        .select("id", { count: "exact" })
+      // Busca todas as estatísticas anuais (1 query - sem N+1!)
+      const { data: allYearlyStats } = await supabase
+        .from("yearly_reading_stats")
+        .select("*")
         .eq("user_id", user.id)
-        .eq("status_leitura", "lido")
-        .gte("updated_at", startOfCurrentYear)
-        .lte("updated_at", endOfCurrentYear);
+        .order("year", { ascending: false });
 
-      // Fetch books read for next year
-      const startOfNextYear = new Date(nextYear, 0, 1).toISOString();
-      const endOfNextYear = new Date(nextYear, 11, 31, 23, 59, 59).toISOString();
-      const { count: nextYearCount } = await supabase
-        .from("books")
-        .select("id", { count: "exact" })
-        .eq("user_id", user.id)
-        .eq("status_leitura", "lido")
-        .gte("updated_at", startOfNextYear)
-        .lte("updated_at", endOfNextYear);
+      const goals = allGoals || [];
+      const yearlyStats = allYearlyStats || [];
 
-      const currentYearGoal = allGoals?.find(g => g.year === currentYear) || null;
-      const nextYearGoal = allGoals?.find(g => g.year === nextYear) || null;
+      // Monta yearData para ano atual e próximo
+      const currentYearGoal = goals.find(g => g.year === currentYear) || null;
+      const nextYearGoal = goals.find(g => g.year === nextYear) || null;
+      const currentYearStats = yearlyStats.find(s => s.year === currentYear) || null;
+      const nextYearStats = yearlyStats.find(s => s.year === nextYear) || null;
 
       const newYearData = {
         [currentYear]: {
           goal: currentYearGoal,
-          booksRead: currentYearCount || 0,
+          yearly: currentYearStats,
           isEditing: false,
           newGoalAmount: currentYearGoal?.goal_amount.toString() || "",
           isSaving: false,
         },
         [nextYear]: {
           goal: nextYearGoal,
-          booksRead: nextYearCount || 0,
+          yearly: nextYearStats,
           isEditing: false,
           newGoalAmount: nextYearGoal?.goal_amount.toString() || "",
           isSaving: false,
@@ -134,39 +143,28 @@ export default function MetasPage() {
 
       setYearData(newYearData);
 
-      // Build history for past years
-      const pastGoals = allGoals?.filter(g => g.year < currentYear) || [];
+      // Monta histórico de anos anteriores
       const historyData: HistoryYear[] = [];
-
-      for (const goal of pastGoals) {
-        const startOfYear = new Date(goal.year, 0, 1).toISOString();
-        const endOfYear = new Date(goal.year, 11, 31, 23, 59, 59).toISOString();
-        const { count } = await supabase
-          .from("books")
-          .select("id", { count: "exact" })
-          .eq("user_id", user.id)
-          .eq("status_leitura", "lido")
-          .gte("updated_at", startOfYear)
-          .lte("updated_at", endOfYear);
-
+      for (const goal of goals.filter(g => g.year < currentYear)) {
+        const stats = yearlyStats.find(s => s.year === goal.year);
         historyData.push({
           year: goal.year,
           goal: goal.goal_amount,
-          booksRead: count || 0,
-          achieved: (count || 0) >= goal.goal_amount,
+          booksRead: stats?.books_read || 0,
+          achieved: (stats?.books_read || 0) >= goal.goal_amount,
         });
       }
+      setHistory(historyData.sort((a, b) => b.year - a.year));
 
-      setHistory(historyData);
-
-      // Salva no cache com userId
+      // Salva no cache
       setMetasCache({
         userId: user.id,
         yearData: {
-          [currentYear]: { goal: currentYearGoal, booksRead: currentYearCount || 0 },
-          [nextYear]: { goal: nextYearGoal, booksRead: nextYearCount || 0 },
+          [currentYear]: { goal: currentYearGoal, yearly: currentYearStats },
+          [nextYear]: { goal: nextYearGoal, yearly: nextYearStats },
         },
-        history: historyData,
+        allYearlyStats: yearlyStats,
+        allGoals: goals,
       });
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -219,7 +217,7 @@ export default function MetasPage() {
       showToast("Meta atualizada com sucesso!", "success");
       updateYearData(year, { isEditing: false });
       
-      // Invalida o cache de metas e dashboard (que mostra a meta também)
+      // Invalida caches e refetch
       invalidateMetasCache();
       invalidateDashboardCache();
       fetchData(true);
@@ -233,7 +231,8 @@ export default function MetasPage() {
 
   const getProgress = (year: number) => {
     const data = yearData[year];
-    return data.goal ? Math.min((data.booksRead / data.goal.goal_amount) * 100, 100) : 0;
+    const booksRead = data.yearly?.books_read || 0;
+    return data.goal ? Math.min((booksRead / data.goal.goal_amount) * 100, 100) : 0;
   };
 
   if (isLoading) {
@@ -263,7 +262,8 @@ export default function MetasPage() {
         {[currentYear, nextYear].map((year) => {
           const data = yearData[year];
           const progress = getProgress(year);
-          const remaining = data.goal ? Math.max(data.goal.goal_amount - data.booksRead, 0) : 0;
+          const booksRead = data.yearly?.books_read || 0;
+          const remaining = data.goal ? Math.max(data.goal.goal_amount - booksRead, 0) : 0;
           const isCurrentYear = year === currentYear;
 
           return (
@@ -336,7 +336,7 @@ export default function MetasPage() {
                     {/* Main number */}
                     <div className="text-center py-1 md:py-2">
                       <p className={`text-3xl md:text-5xl font-bold ${isCurrentYear ? "text-primary" : "text-blue-500"}`}>
-                        {data.booksRead}
+                        {booksRead}
                       </p>
                       <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                         de {data.goal.goal_amount} livros
@@ -364,7 +364,7 @@ export default function MetasPage() {
                         <div className="w-6 h-6 md:w-8 md:h-8 mx-auto rounded-lg bg-green-500/10 flex items-center justify-center text-green-500 mb-0.5 md:mb-1">
                           <BookOpen className="w-3 h-3 md:w-4 md:h-4" />
                         </div>
-                        <p className="text-sm md:text-lg font-bold">{data.booksRead}</p>
+                        <p className="text-sm md:text-lg font-bold">{booksRead}</p>
                         <p className="text-[10px] md:text-xs text-muted-foreground">Lidos</p>
                       </div>
                       <div className="text-center">

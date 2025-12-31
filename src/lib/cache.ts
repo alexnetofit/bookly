@@ -1,55 +1,29 @@
 // Sistema central de cache em memória
 // Gerencia todos os caches do app e permite invalidação global
 
-import type { AnnualGoal, Book, CommunityPost } from "@/types/database";
+import type { DashboardData, AnnualGoal, YearlyReadingStats } from "@/types/database";
 
 // ==========================================
 // TIPOS
 // ==========================================
 
-interface BookStats {
-  total: number;
-  lido: number;
-  lendo: number;
-  nao_comecou: number;
-  desistido: number;
-  total_paginas_lidas: number;
-  autores_unicos: number;
-  generos_unicos: number;
-  total_posts: number;
-}
-
-interface AuthorRanking {
-  autor: string;
-  count: number;
-}
-
 interface DashboardCache {
   userId: string;
-  stats: BookStats | null;
-  goal: AnnualGoal | null;
-  topAuthors: AuthorRanking[];
-  allBooks: Book[];
-  allPosts: CommunityPost[];
+  year: number;
+  data: DashboardData;
   timestamp: number;
 }
 
-interface YearCacheData {
+interface YearGoalData {
   goal: AnnualGoal | null;
-  booksRead: number;
-}
-
-interface HistoryYear {
-  year: number;
-  goal: number;
-  booksRead: number;
-  achieved: boolean;
+  yearly: YearlyReadingStats | null;
 }
 
 interface MetasCache {
   userId: string;
-  yearData: Record<number, YearCacheData>;
-  history: HistoryYear[];
+  yearData: Record<number, YearGoalData>;
+  allYearlyStats: YearlyReadingStats[];
+  allGoals: AnnualGoal[];
   timestamp: number;
 }
 
@@ -60,24 +34,27 @@ interface MetasCache {
 let dashboardCache: DashboardCache | null = null;
 let metasCache: MetasCache | null = null;
 
-// TTLs
-export const DASHBOARD_CACHE_TTL = 2 * 60 * 1000; // 2 minutos
-export const METAS_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+// TTLs - Com dados pré-agregados, podemos aumentar
+export const DASHBOARD_CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+export const METAS_CACHE_TTL = 10 * 60 * 1000; // 10 minutos
 
 // ==========================================
 // DASHBOARD CACHE
 // ==========================================
 
-export function getDashboardCache(userId: string): DashboardCache | null {
+export function getDashboardCache(userId: string, year: number): DashboardData | null {
   if (!dashboardCache) return null;
   if (dashboardCache.userId !== userId) return null;
+  if (dashboardCache.year !== year) return null;
   if (Date.now() - dashboardCache.timestamp > DASHBOARD_CACHE_TTL) return null;
-  return dashboardCache;
+  return dashboardCache.data;
 }
 
-export function setDashboardCache(data: Omit<DashboardCache, "timestamp">): void {
+export function setDashboardCache(userId: string, year: number, data: DashboardData): void {
   dashboardCache = {
-    ...data,
+    userId,
+    year,
+    data,
     timestamp: Date.now(),
   };
 }
@@ -129,4 +106,3 @@ export function invalidateBookRelatedCaches(): void {
   invalidateDashboardCache();
   invalidateMetasCache();
 }
-

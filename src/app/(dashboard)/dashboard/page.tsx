@@ -8,138 +8,53 @@ import { useUser } from "@/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton, EmptyState, Button, Modal } from "@/components/ui";
 import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp, MessageCircle, Tag } from "lucide-react";
 import Link from "next/link";
-import type { Book as BookType, AnnualGoal, CommunityPost } from "@/types/database";
+import type { DashboardData, Book as BookType } from "@/types/database";
 import { ShareDashboard } from "@/components/features/share-dashboard";
 import { getDashboardCache, setDashboardCache } from "@/lib/cache";
 
 type ModalType = "lidos" | "lendo" | "quero_ler" | "abandonados" | "paginas" | "autores" | "generos" | "posts" | null;
 
-interface BookStats {
-  total: number;
-  lido: number;
-  lendo: number;
-  nao_comecou: number;
-  desistido: number;
-  total_paginas_lidas: number;
-  autores_unicos: number;
-  generos_unicos: number;
-  total_posts: number;
-}
-
-interface AuthorRanking {
-  autor: string;
-  count: number;
-}
-
 export default function DashboardPage() {
   const { user, profile } = useUser();
   const currentYear = new Date().getFullYear();
   
-  // Inicializa com cache se disponível e válido para o usuário atual
-  const cachedData = user ? getDashboardCache(user.id) : null;
+  // Inicializa com cache se disponível
+  const cachedData = user ? getDashboardCache(user.id, currentYear) : null;
   
-  const [stats, setStats] = useState<BookStats | null>(cachedData?.stats ?? null);
-  const [goal, setGoal] = useState<AnnualGoal | null>(cachedData?.goal ?? null);
-  const [topAuthors, setTopAuthors] = useState<AuthorRanking[]>(cachedData?.topAuthors ?? []);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(cachedData);
   const [isLoading, setIsLoading] = useState(!cachedData);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const [allBooks, setAllBooks] = useState<BookType[]>(cachedData?.allBooks ?? []);
-  const [allPosts, setAllPosts] = useState<CommunityPost[]>(cachedData?.allPosts ?? []);
+  const [modalBooks, setModalBooks] = useState<BookType[]>([]);
+  const [isLoadingModal, setIsLoadingModal] = useState(false);
+  
   const supabase = createClient();
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return;
     
     // Se cache válido para este usuário, não busca novamente
-    const existingCache = getDashboardCache(user.id);
+    const existingCache = getDashboardCache(user.id, currentYear);
     if (existingCache) {
+      setDashboardData(existingCache);
+      setIsLoading(false);
       return;
     }
     
     setIsLoading(true);
     try {
-      // Fetch user's books only
-      const { data: booksData } = await supabase
-        .from("books")
-        .select("*")
-        .eq("user_id", user.id);
-
-      const books = (booksData || []) as BookType[];
-      setAllBooks(books);
-
-      // Fetch user's posts
-      const { data: postsData } = await supabase
-        .from("community_posts")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      const posts = (postsData || []) as CommunityPost[];
-      setAllPosts(posts);
-      const postsCount = posts.length;
-
-      let statsData: BookStats | null = null;
-      let ranking: AuthorRanking[] = [];
-
-      if (books.length > 0) {
-        // Calculate unique genres
-        const generosUnicos = new Set(
-          books
-            .filter((b: BookType) => b.genero)
-            .map((b: BookType) => b.genero)
-        ).size;
-
-        // Calculate stats
-        statsData = {
-          total: books.length,
-          lido: books.filter((b: BookType) => b.status_leitura === "lido").length,
-          lendo: books.filter((b: BookType) => b.status_leitura === "lendo").length,
-          nao_comecou: books.filter((b: BookType) => b.status_leitura === "nao_comecou").length,
-          desistido: books.filter((b: BookType) => b.status_leitura === "desistido").length,
-          total_paginas_lidas: books.reduce((acc: number, b: BookType) => acc + (b.paginas_lidas || 0), 0),
-          autores_unicos: new Set(books.map((b: BookType) => b.autor.toLowerCase())).size,
-          generos_unicos: generosUnicos,
-          total_posts: postsCount || 0,
-        };
-        setStats(statsData);
-
-        // Calculate author ranking
-        const authorCount: Record<string, number> = {};
-        books
-          .filter((b: BookType) => b.status_leitura === "lido")
-          .forEach((b: BookType) => {
-            const autor = b.autor;
-            authorCount[autor] = (authorCount[autor] || 0) + 1;
-          });
-
-        ranking = Object.entries(authorCount)
-          .map(([autor, count]) => ({ autor, count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 5);
-
-        setTopAuthors(ranking);
-      }
-
-      // Fetch annual goal
-      const { data: goalData } = await supabase
-        .from("annual_goals")
-        .select("*")
-        .eq("year", currentYear)
-        .single();
-
-      if (goalData) {
-        setGoal(goalData);
-      }
-
-      // Salva no cache com userId
-      setDashboardCache({
-        userId: user.id,
-        stats: statsData,
-        goal: goalData || null,
-        topAuthors: ranking,
-        allBooks: books,
-        allPosts: posts,
+      // Uma única chamada RPC retorna tudo
+      const { data, error } = await supabase.rpc('get_dashboard', {
+        p_user_id: user.id,
+        p_year: currentYear
       });
+
+      if (error) throw error;
+
+      const dashData = data as DashboardData;
+      setDashboardData(dashData);
+      
+      // Salva no cache
+      setDashboardCache(user.id, currentYear, dashData);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -153,7 +68,60 @@ export default function DashboardPage() {
     }
   }, [user, fetchDashboardData]);
 
-  const booksReadThisYear = stats?.lido || 0;
+  // Busca livros por status para o modal
+  const fetchBooksForModal = useCallback(async (status: string | null) => {
+    if (!user) return;
+    
+    setIsLoadingModal(true);
+    try {
+      let query = supabase
+        .from("books")
+        .select("*")
+        .eq("user_id", user.id);
+      
+      if (status) {
+        query = query.eq("status_leitura", status);
+      }
+      
+      const { data } = await query.order("updated_at", { ascending: false });
+      setModalBooks(data || []);
+    } catch (error) {
+      console.error("Error fetching books:", error);
+    } finally {
+      setIsLoadingModal(false);
+    }
+  }, [user]);
+
+  const handleOpenModal = (type: ModalType) => {
+    setActiveModal(type);
+    
+    switch (type) {
+      case "lidos":
+        fetchBooksForModal("lido");
+        break;
+      case "lendo":
+        fetchBooksForModal("lendo");
+        break;
+      case "quero_ler":
+        fetchBooksForModal("nao_comecou");
+        break;
+      case "abandonados":
+        fetchBooksForModal("desistido");
+        break;
+      case "paginas":
+      case "autores":
+      case "generos":
+        fetchBooksForModal(null);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const stats = dashboardData?.stats;
+  const goal = dashboardData?.goal;
+  const topAuthors = dashboardData?.top_authors || [];
+  const booksReadThisYear = dashboardData?.yearly?.books_read || stats?.books_lido || 0;
   const goalProgress = goal ? (booksReadThisYear / goal.goal_amount) * 100 : 0;
 
   if (isLoading) {
@@ -174,7 +142,17 @@ export default function DashboardPage() {
         </div>
         <div className="flex gap-2">
           <ShareDashboard 
-            stats={stats} 
+            stats={stats ? {
+              total: stats.total_books,
+              lido: stats.books_lido,
+              lendo: stats.books_lendo,
+              nao_comecou: stats.books_nao_comecou,
+              desistido: stats.books_desistido,
+              total_paginas_lidas: stats.total_pages_read,
+              autores_unicos: dashboardData?.unique_authors || 0,
+              generos_unicos: dashboardData?.unique_genres || 0,
+              total_posts: stats.total_posts,
+            } : null} 
             goal={goal} 
             userName={profile?.full_name?.split(" ")[0] || "Leitor"} 
           />
@@ -231,58 +209,58 @@ export default function DashboardPage() {
         <StatCard
           icon={<BookOpen className="w-5 h-5" />}
           label="Lidos"
-          value={stats?.lido || 0}
+          value={stats?.books_lido || 0}
           color="text-green-500"
           bgColor="bg-green-500/10"
-          onClick={() => setActiveModal("lidos")}
+          onClick={() => handleOpenModal("lidos")}
         />
         <StatCard
           icon={<Book className="w-5 h-5" />}
           label="Lendo"
-          value={stats?.lendo || 0}
+          value={stats?.books_lendo || 0}
           color="text-blue-500"
           bgColor="bg-blue-500/10"
-          onClick={() => setActiveModal("lendo")}
+          onClick={() => handleOpenModal("lendo")}
         />
         <StatCard
           icon={<Clock className="w-5 h-5" />}
           label="Quero ler"
-          value={stats?.nao_comecou || 0}
+          value={stats?.books_nao_comecou || 0}
           color="text-gray-500"
           bgColor="bg-gray-500/10"
-          onClick={() => setActiveModal("quero_ler")}
+          onClick={() => handleOpenModal("quero_ler")}
         />
         <StatCard
           icon={<BookX className="w-5 h-5" />}
           label="Abandonados"
-          value={stats?.desistido || 0}
+          value={stats?.books_desistido || 0}
           color="text-red-500"
           bgColor="bg-red-500/10"
-          onClick={() => setActiveModal("abandonados")}
+          onClick={() => handleOpenModal("abandonados")}
         />
         <StatCard
           icon={<FileText className="w-5 h-5" />}
           label="Páginas lidas"
-          value={stats?.total_paginas_lidas.toLocaleString("pt-BR") || 0}
+          value={stats?.total_pages_read?.toLocaleString("pt-BR") || 0}
           color="text-purple-500"
           bgColor="bg-purple-500/10"
-          onClick={() => setActiveModal("paginas")}
+          onClick={() => handleOpenModal("paginas")}
         />
         <StatCard
           icon={<Users className="w-5 h-5" />}
           label="Autores"
-          value={stats?.autores_unicos || 0}
+          value={dashboardData?.unique_authors || 0}
           color="text-orange-500"
           bgColor="bg-orange-500/10"
-          onClick={() => setActiveModal("autores")}
+          onClick={() => handleOpenModal("autores")}
         />
         <StatCard
           icon={<Tag className="w-5 h-5" />}
           label="Gêneros"
-          value={stats?.generos_unicos || 0}
+          value={dashboardData?.unique_genres || 0}
           color="text-pink-500"
           bgColor="bg-pink-500/10"
-          onClick={() => setActiveModal("generos")}
+          onClick={() => handleOpenModal("generos")}
         />
         <StatCard
           icon={<MessageCircle className="w-5 h-5" />}
@@ -290,41 +268,37 @@ export default function DashboardPage() {
           value={stats?.total_posts || 0}
           color="text-cyan-500"
           bgColor="bg-cyan-500/10"
-          onClick={() => setActiveModal("posts")}
+          onClick={() => {}}
         />
       </div>
 
       {/* Modals */}
       <Modal isOpen={activeModal === "lidos"} onClose={() => setActiveModal(null)} title="Livros Lidos">
-        <BooksList books={allBooks.filter(b => b.status_leitura === "lido")} />
+        {isLoadingModal ? <ModalSkeleton /> : <BooksList books={modalBooks} />}
       </Modal>
 
       <Modal isOpen={activeModal === "lendo"} onClose={() => setActiveModal(null)} title="Livros em Leitura">
-        <BooksList books={allBooks.filter(b => b.status_leitura === "lendo")} />
+        {isLoadingModal ? <ModalSkeleton /> : <BooksList books={modalBooks} />}
       </Modal>
 
       <Modal isOpen={activeModal === "quero_ler"} onClose={() => setActiveModal(null)} title="Quero Ler">
-        <BooksList books={allBooks.filter(b => b.status_leitura === "nao_comecou")} />
+        {isLoadingModal ? <ModalSkeleton /> : <BooksList books={modalBooks} />}
       </Modal>
 
       <Modal isOpen={activeModal === "abandonados"} onClose={() => setActiveModal(null)} title="Livros Abandonados">
-        <BooksList books={allBooks.filter(b => b.status_leitura === "desistido")} />
+        {isLoadingModal ? <ModalSkeleton /> : <BooksList books={modalBooks} />}
       </Modal>
 
       <Modal isOpen={activeModal === "paginas"} onClose={() => setActiveModal(null)} title="Páginas por Livro">
-        <PaginasList books={allBooks} />
+        {isLoadingModal ? <ModalSkeleton /> : <PaginasList books={modalBooks} />}
       </Modal>
 
       <Modal isOpen={activeModal === "autores"} onClose={() => setActiveModal(null)} title="Autores">
-        <AuthorsList books={allBooks} />
+        {isLoadingModal ? <ModalSkeleton /> : <AuthorsList books={modalBooks} />}
       </Modal>
 
       <Modal isOpen={activeModal === "generos"} onClose={() => setActiveModal(null)} title="Gêneros">
-        <GenresList books={allBooks} />
-      </Modal>
-
-      <Modal isOpen={activeModal === "posts"} onClose={() => setActiveModal(null)} title="Seus Posts">
-        <PostsList posts={allPosts} />
+        {isLoadingModal ? <ModalSkeleton /> : <GenresList books={modalBooks} />}
       </Modal>
 
       {/* Author Ranking */}
@@ -340,7 +314,7 @@ export default function DashboardPage() {
             <div className="space-y-3">
               {topAuthors.map((author, index) => (
                 <div
-                  key={author.autor}
+                  key={author.author}
                   className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
                 >
                   <span
@@ -357,7 +331,7 @@ export default function DashboardPage() {
                     {index + 1}
                   </span>
                   <div className="flex-1">
-                    <p className="font-medium">{author.autor}</p>
+                    <p className="font-medium">{author.author}</p>
                     <p className="text-sm text-muted-foreground">
                       {author.count} {author.count === 1 ? "livro lido" : "livros lidos"}
                     </p>
@@ -406,6 +380,16 @@ function StatCard({
         <p className="text-sm text-muted-foreground">{label}</p>
       </CardContent>
     </Card>
+  );
+}
+
+function ModalSkeleton() {
+  return (
+    <div className="space-y-2">
+      {[...Array(5)].map((_, i) => (
+        <Skeleton key={i} className="h-16 w-full" />
+      ))}
+    </div>
   );
 }
 
@@ -537,63 +521,6 @@ function GenresList({ books }: { books: BookType[] }) {
   );
 }
 
-// Lista de posts
-function PostsList({ posts }: { posts: CommunityPost[] }) {
-  if (posts.length === 0) {
-    return <p className="text-muted-foreground text-center py-4">Nenhum post encontrado.</p>;
-  }
-
-  return (
-    <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-      {posts.map((post) => (
-        <div 
-          key={post.id} 
-          className="p-4 rounded-lg bg-muted/50 space-y-3"
-        >
-          {/* Livro associado */}
-          {post.book_title && (
-            <div className="flex items-center gap-3 pb-3 border-b border-border/50">
-              {post.book_cover_url ? (
-                <img 
-                  src={post.book_cover_url} 
-                  alt={post.book_title} 
-                  className="w-10 h-14 object-cover rounded shadow-sm" 
-                />
-              ) : (
-                <div className="w-10 h-14 bg-muted rounded flex items-center justify-center">
-                  <Book className="w-5 h-5 text-muted-foreground" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{post.book_title}</p>
-                <p className="text-xs text-muted-foreground truncate">{post.book_author}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Conteúdo do post */}
-          <p className="text-sm">{post.content}</p>
-
-          {/* Rodapé */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>
-              {new Date(post.created_at).toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })}
-            </span>
-            <div className="flex items-center gap-3">
-              <span>❤️ {post.likes_count}</span>
-              <span>💬 {post.comments_count}</span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function DashboardSkeleton() {
   return (
     <div className="space-y-8">
@@ -607,8 +534,8 @@ function DashboardSkeleton() {
 
       <Skeleton className="h-40 w-full" />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {[...Array(6)].map((_, i) => (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[...Array(8)].map((_, i) => (
           <Skeleton key={i} className="h-32" />
         ))}
       </div>
@@ -617,4 +544,3 @@ function DashboardSkeleton() {
     </div>
   );
 }
-

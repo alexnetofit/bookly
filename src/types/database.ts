@@ -53,6 +53,7 @@ export interface Book {
   genero: string | null;
   data_inicio: string | null;
   data_termino: string | null;
+  finished_at: string | null; // Data de conclusão (setada automaticamente quando status = 'lido')
   created_at: string;
   updated_at: string;
 }
@@ -103,6 +104,72 @@ export interface UserFollow {
   follower_id: string;
   following_id: string;
   created_at: string;
+}
+
+// =============================================
+// TABELAS DE DADOS PRÉ-AGREGADOS (Performance)
+// =============================================
+
+export interface UserStats {
+  user_id: string;
+  total_books: number;
+  books_lido: number;
+  books_lendo: number;
+  books_nao_comecou: number;
+  books_desistido: number;
+  total_pages_read: number;
+  total_posts: number;
+  updated_at: string;
+}
+
+export interface YearlyReadingStats {
+  id: string;
+  user_id: string;
+  year: number;
+  books_read: number;
+  pages_read: number;
+  updated_at: string;
+}
+
+export interface UserAuthor {
+  id: string;
+  user_id: string;
+  author_normalized: string;
+  author_display: string;
+  books_count: number;
+  books_read_count: number;
+}
+
+export interface UserGenre {
+  id: string;
+  user_id: string;
+  genre: string;
+  books_count: number;
+  books_read_count: number;
+}
+
+// =============================================
+// TIPOS PARA RPC get_dashboard
+// =============================================
+
+export interface AuthorRanking {
+  author: string;
+  count: number;
+}
+
+export interface GenreRanking {
+  genre: string;
+  count: number;
+}
+
+export interface DashboardData {
+  stats: UserStats | null;
+  yearly: YearlyReadingStats | null;
+  goal: AnnualGoal | null;
+  top_authors: AuthorRanking[];
+  top_genres: GenreRanking[];
+  unique_authors: number;
+  unique_genres: number;
 }
 
 // Database types for Supabase
