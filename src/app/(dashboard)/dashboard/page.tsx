@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton, EmptyState, Button, Modal } from "@/components/ui";
-import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp, MessageCircle, Tag, X } from "lucide-react";
+import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp, MessageCircle, Tag } from "lucide-react";
 import Link from "next/link";
 import type { Book as BookType, AnnualGoal, CommunityPost } from "@/types/database";
 import { ShareDashboard } from "@/components/features/share-dashboard";
@@ -30,27 +30,47 @@ interface AuthorRanking {
   count: number;
 }
 
+// Cache em memória para dashboard (persiste entre navegações)
+interface DashboardCache {
+  stats: BookStats | null;
+  goal: AnnualGoal | null;
+  topAuthors: AuthorRanking[];
+  allBooks: BookType[];
+  allPosts: CommunityPost[];
+  timestamp: number;
+}
+
+let dashboardCache: DashboardCache | null = null;
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutos (dashboard muda mais frequentemente)
+
+// Função para invalidar cache externamente (pode ser chamada de outras páginas)
+export function invalidateDashboardCache() {
+  dashboardCache = null;
+}
+
 export default function DashboardPage() {
   const { user, profile } = useUser();
-  const [stats, setStats] = useState<BookStats | null>(null);
-  const [goal, setGoal] = useState<AnnualGoal | null>(null);
-  const [topAuthors, setTopAuthors] = useState<AuthorRanking[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const currentYear = new Date().getFullYear();
+  
+  // Inicializa com cache se disponível e válido
+  const isCacheValid = dashboardCache && (Date.now() - dashboardCache.timestamp) < CACHE_TTL;
+  
+  const [stats, setStats] = useState<BookStats | null>(isCacheValid ? dashboardCache!.stats : null);
+  const [goal, setGoal] = useState<AnnualGoal | null>(isCacheValid ? dashboardCache!.goal : null);
+  const [topAuthors, setTopAuthors] = useState<AuthorRanking[]>(isCacheValid ? dashboardCache!.topAuthors : []);
+  const [isLoading, setIsLoading] = useState(!isCacheValid);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const [allBooks, setAllBooks] = useState<BookType[]>([]);
-  const [allPosts, setAllPosts] = useState<CommunityPost[]>([]);
+  const [allBooks, setAllBooks] = useState<BookType[]>(isCacheValid ? dashboardCache!.allBooks : []);
+  const [allPosts, setAllPosts] = useState<CommunityPost[]>(isCacheValid ? dashboardCache!.allPosts : []);
   const supabase = createClient();
 
-  const currentYear = new Date().getFullYear();
-
-  useEffect(() => {
-    if (user) {
-      fetchDashboardData();
-    }
-  }, [user]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     if (!user) return;
+    
+    // Se cache válido, não busca novamente
+    if (dashboardCache && (Date.now() - dashboardCache.timestamp) < CACHE_TTL) {
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -74,6 +94,9 @@ export default function DashboardPage() {
       setAllPosts(posts);
       const postsCount = posts.length;
 
+      let statsData: BookStats | null = null;
+      let ranking: AuthorRanking[] = [];
+
       if (books.length > 0) {
         // Calculate unique genres
         const generosUnicos = new Set(
@@ -83,7 +106,7 @@ export default function DashboardPage() {
         ).size;
 
         // Calculate stats
-        const statsData: BookStats = {
+        statsData = {
           total: books.length,
           lido: books.filter((b: BookType) => b.status_leitura === "lido").length,
           lendo: books.filter((b: BookType) => b.status_leitura === "lendo").length,
@@ -105,7 +128,7 @@ export default function DashboardPage() {
             authorCount[autor] = (authorCount[autor] || 0) + 1;
           });
 
-        const ranking = Object.entries(authorCount)
+        ranking = Object.entries(authorCount)
           .map(([autor, count]) => ({ autor, count }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 5);
@@ -123,12 +146,28 @@ export default function DashboardPage() {
       if (goalData) {
         setGoal(goalData);
       }
+
+      // Salva no cache
+      dashboardCache = {
+        stats: statsData,
+        goal: goalData || null,
+        topAuthors: ranking,
+        allBooks: books,
+        allPosts: posts,
+        timestamp: Date.now(),
+      };
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, currentYear]);
+
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user, fetchDashboardData]);
 
   const booksReadThisYear = stats?.lido || 0;
   const goalProgress = goal ? (booksReadThisYear / goal.goal_amount) * 100 : 0;

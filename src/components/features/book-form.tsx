@@ -11,6 +11,7 @@ import { BookSearch } from "./book-search";
 import type { Book, ReadingStatus, BookSearchResult, BookFormat } from "@/types/database";
 import { Save, ArrowLeft, Search, PenLine, Users, AlertTriangle, Upload, X, ImageIcon, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { invalidateDashboardCache } from "@/app/(dashboard)/dashboard/page";
 
 const FREE_BOOK_LIMIT = 3;
 
@@ -283,6 +284,9 @@ export function BookForm({ book, mode }: BookFormProps) {
         showToast("Livro atualizado com sucesso!", "success");
       }
 
+      // Invalida cache do dashboard para refletir mudanças
+      invalidateDashboardCache();
+      
       router.push("/estante");
       router.refresh();
     } catch (error) {
