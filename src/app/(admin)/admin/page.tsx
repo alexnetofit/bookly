@@ -8,6 +8,7 @@ import {
   AdminUsers,
   AdminSubscriptions,
   AdminModeration,
+  AdminGenres,
   type AdminTab,
 } from "@/components/admin";
 
@@ -38,6 +39,7 @@ export default function AdminPage() {
         {activeTab === "users" && <AdminUsers />}
         {activeTab === "subscriptions" && <AdminSubscriptions />}
         {activeTab === "moderation" && <AdminModeration />}
+        {activeTab === "genres" && <AdminGenres />}
       </div>
     </div>
   );
