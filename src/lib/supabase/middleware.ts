@@ -55,10 +55,18 @@ export async function updateSession(request: NextRequest) {
 
   // Define public routes that don't require authentication
   const publicRoutes = ["/", "/login", "/cadastro", "/auth/callback", "/assinatura-expirada", "/esqueci-senha", "/redefinir-senha"];
+  
+  // Routes that require auth but should bypass subscription check
+  const bypassSubscriptionRoutes = ["/planos", "/api/stripe"];
+  
   const isPublicRoute = publicRoutes.some(
     (route) =>
       request.nextUrl.pathname === route ||
       request.nextUrl.pathname.startsWith("/api/webhook")
+  );
+  
+  const isBypassSubscriptionRoute = bypassSubscriptionRoutes.some(
+    (route) => request.nextUrl.pathname.startsWith(route)
   );
 
   // Redirect to login if not authenticated and not on a public route
@@ -66,15 +74,26 @@ export async function updateSession(request: NextRequest) {
     return createRedirect("/login");
   }
 
-  // Check subscription status for protected routes (except admin routes)
-  if (user && !isPublicRoute && !request.nextUrl.pathname.startsWith("/admin")) {
+  // Check subscription status for protected routes (except admin routes and bypass routes)
+  if (user && !isPublicRoute && !isBypassSubscriptionRoute && !request.nextUrl.pathname.startsWith("/admin")) {
     const { data: profile } = await supabase
       .from("users_profile")
-      .select("subscription_expires_at, is_admin")
+      .select("subscription_expires_at, is_admin, plan")
       .eq("id", user.id)
       .single();
 
     if (profile && !profile.is_admin) {
+      // Planos pagos que precisam de verificação de expiração
+      const paidPlans = ["explorer", "traveler", "devourer"];
+      const isPaidPlan = paidPlans.includes(profile.plan || "");
+      
+      // Se for plano grátis (null, "free" ou inexistente), permitir acesso
+      if (!isPaidPlan) {
+        // Plano grátis - permitir acesso (limite de livros é controlado no app)
+        return supabaseResponse;
+      }
+      
+      // Se for plano pago, verificar expiração
       const expiresAt = profile.subscription_expires_at
         ? new Date(profile.subscription_expires_at)
         : null;

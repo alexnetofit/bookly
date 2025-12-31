@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { Button, Card, CardContent } from "@/components/ui";
-import { Clock, LogOut, Mail } from "lucide-react";
+import { Clock, LogOut, Crown } from "lucide-react";
+import Link from "next/link";
 
 export default function AssinaturaExpiradaPage() {
   const router = useRouter();
@@ -49,13 +50,12 @@ export default function AssinaturaExpiradaPage() {
           </div>
 
           <div className="space-y-3">
-            <a
-              href="mailto:contato@babelbookshelf.com"
-              className="w-full inline-flex items-center justify-center h-10 px-4 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              Entrar em contato
-            </a>
+            <Link href="/planos" className="block">
+              <Button className="w-full">
+                <Crown className="mr-2 h-4 w-4" />
+                Renovar Assinatura
+              </Button>
+            </Link>
 
             <Button variant="outline" onClick={handleLogout} className="w-full">
               <LogOut className="mr-2 h-4 w-4" />
