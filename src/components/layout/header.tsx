@@ -79,11 +79,11 @@ export function Header({ onMenuClick, isSidebarCollapsed }: HeaderProps) {
           )}
         </Button>
 
-        {/* Notifications placeholder */}
-        <Button variant="ghost" size="icon" className="rounded-lg relative">
+        {/* Notifications - hidden for now */}
+        {/* <Button variant="ghost" size="icon" className="rounded-lg relative">
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
-        </Button>
+        </Button> */}
 
         {/* User dropdown */}
         <div className="relative" ref={dropdownRef}>

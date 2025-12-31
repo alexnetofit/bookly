@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
-import { Sun, Moon, User, Settings, LogOut } from "lucide-react";
+import { Sun, Moon, User, Settings, LogOut, CreditCard } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -101,12 +101,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           style={{ height: 32, width: 'auto' }}
         />
         
-        {/* Profile Menu */}
-        <div className="relative" ref={profileMenuRef}>
-          <button
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center overflow-hidden"
+        {/* Subscription & Profile */}
+        <div className="flex items-center gap-2">
+          {/* Subscription Icon */}
+          <Link
+            href="/planos"
+            className="w-9 h-9 rounded-full bg-amber-500/10 flex items-center justify-center"
           >
+            <CreditCard className="w-4 h-4 text-amber-600" />
+          </Link>
+
+          {/* Profile Menu */}
+          <div className="relative" ref={profileMenuRef}>
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center overflow-hidden"
+            >
             {profile?.avatar_url ? (
               <img
                 src={profile.avatar_url}
@@ -161,6 +171,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </button>
             </div>
           )}
+          </div>
         </div>
       </header>
 

@@ -1,9 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, CreditCard, MessageSquare, BookOpen } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, MessageSquare, BookOpen, Map } from "lucide-react";
 
-export type AdminTab = "dashboard" | "users" | "subscriptions" | "moderation" | "genres";
+export type AdminTab = "dashboard" | "users" | "subscriptions" | "moderation" | "genres" | "roadmap";
 
 interface AdminTabsProps {
   activeTab: AdminTab;
@@ -16,6 +16,7 @@ const tabs = [
   { id: "subscriptions" as const, label: "Assinaturas", icon: CreditCard },
   { id: "moderation" as const, label: "Moderação", icon: MessageSquare },
   { id: "genres" as const, label: "Gêneros", icon: BookOpen },
+  { id: "roadmap" as const, label: "Roadmap", icon: Map },
 ];
 
 export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {

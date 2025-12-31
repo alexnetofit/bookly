@@ -10,9 +10,8 @@ import {
   Library,
   Target,
   Users,
-  Settings,
   Shield,
-  Gift,
+  Map,
 } from "lucide-react";
 
 export const BottomNav = memo(function BottomNav() {
@@ -41,11 +40,11 @@ export const BottomNav = memo(function BottomNav() {
       icon: Users,
     },
     {
-      label: "Indique",
-      href: "/indique",
-      icon: Gift,
+      label: "Roadmap",
+      href: "/roadmap",
+      icon: Map,
     },
-    // Show Admin for admins, otherwise show Config
+    // Show Admin for admins
     ...(profile?.is_admin
       ? [
           {
@@ -54,13 +53,7 @@ export const BottomNav = memo(function BottomNav() {
             icon: Shield,
           },
         ]
-      : [
-          {
-            label: "Config",
-            href: "/configuracoes",
-            icon: Settings,
-          },
-        ]),
+      : []),
   ];
 
   return (

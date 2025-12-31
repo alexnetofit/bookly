@@ -15,8 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
-  Gift,
   Crown,
+  Map,
 } from "lucide-react";
 
 const navItems = [
@@ -41,9 +41,9 @@ const navItems = [
     icon: Users,
   },
   {
-    label: "Indique e Ganhe",
-    href: "/indique",
-    icon: Gift,
+    label: "Próximos Capítulos",
+    href: "/roadmap",
+    icon: Map,
   },
   {
     label: "Assinatura",
