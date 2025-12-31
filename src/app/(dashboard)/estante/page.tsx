@@ -39,7 +39,7 @@ const sortOptions = [
 ];
 
 export default function EstantePage() {
-  const { user, profile } = useUser();
+  const { user, profile, isLoading: profileLoading } = useUser();
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -49,18 +49,18 @@ export default function EstantePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
-  const [sortBy, setSortBy] = useState("created_at_desc");
+  const [sortBy, setSortBy] = useState("");
 
   const debouncedSearch = useDebounce(searchQuery, 300);
   const supabase = createClient();
 
-  // Carregar ordenação preferida do profile
+  // Carregar ordenação preferida do profile (ou padrão se não tiver)
   useEffect(() => {
-    if (profile?.preferred_sort && !sortLoaded) {
-      setSortBy(profile.preferred_sort);
+    if (!profileLoading && !sortLoaded) {
+      setSortBy(profile?.preferred_sort || "created_at_desc");
       setSortLoaded(true);
     }
-  }, [profile, sortLoaded]);
+  }, [profile, profileLoading, sortLoaded]);
 
   // Salvar ordenação preferida no banco
   const handleSortChange = async (newSort: string) => {
@@ -117,10 +117,10 @@ export default function EstantePage() {
   }, [user, debouncedSearch, statusFilter, ratingFilter, sortBy]);
 
   useEffect(() => {
-    if (user) {
+    if (user && sortLoaded) {
       fetchBooks();
     }
-  }, [fetchBooks, user]);
+  }, [fetchBooks, user, sortLoaded]);
 
   const activeFiltersCount = [statusFilter, ratingFilter].filter(Boolean).length;
 
