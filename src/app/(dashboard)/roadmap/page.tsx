@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
-import { Card, CardContent, Button, Input, Textarea, Modal, Skeleton } from "@/components/ui";
+import { Card, CardContent, Button, Textarea, Modal, Skeleton } from "@/components/ui";
 import { Map, BookOpen, Pencil, BookCheck, Plus, ThumbsUp, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,25 +25,25 @@ const columns = [
     id: "planned",
     title: "Próximos Capítulos",
     icon: BookOpen,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50 dark:bg-blue-900/20",
-    borderColor: "border-blue-200 dark:border-blue-800",
+    color: "text-blue-700 dark:text-blue-400",
+    headerBg: "bg-blue-100 dark:bg-blue-900/40",
+    borderColor: "border-blue-300 dark:border-blue-700",
   },
   {
     id: "in_progress",
     title: "Escrevendo História",
     icon: Pencil,
-    color: "text-amber-600",
-    bgColor: "bg-amber-50 dark:bg-amber-900/20",
-    borderColor: "border-amber-200 dark:border-amber-800",
+    color: "text-amber-700 dark:text-amber-400",
+    headerBg: "bg-amber-100 dark:bg-amber-900/40",
+    borderColor: "border-amber-300 dark:border-amber-700",
   },
   {
     id: "completed",
     title: "Livro Publicado",
     icon: BookCheck,
-    color: "text-green-600",
-    bgColor: "bg-green-50 dark:bg-green-900/20",
-    borderColor: "border-green-200 dark:border-green-800",
+    color: "text-green-700 dark:text-green-400",
+    headerBg: "bg-green-100 dark:bg-green-900/40",
+    borderColor: "border-green-300 dark:border-green-700",
   },
 ];
 
@@ -182,49 +182,54 @@ export default function RoadmapPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-            <Map className="w-7 h-7 text-primary" />
-            Próximos Capítulos
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Roadmap do Babel
           </h1>
           <p className="text-muted-foreground mt-1">
             Acompanhe o que estamos desenvolvendo e vote nas próximas funcionalidades
           </p>
         </div>
-        <Button onClick={() => setShowSuggestionModal(true)}>
+        <Button 
+          onClick={() => setShowSuggestionModal(true)}
+          className="bg-green-600 hover:bg-green-700 text-white"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Sugestão
         </Button>
       </div>
 
-      {/* Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Columns - AbacatePay style */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {columns.map((column) => {
           const Icon = column.icon;
           const columnItems = getItemsByStatus(column.id);
 
           return (
-            <div key={column.id} className="space-y-4">
+            <div key={column.id} className="flex flex-col">
               {/* Column Header */}
               <div className={cn(
-                "flex items-center gap-2 p-3 rounded-lg border-2",
-                column.bgColor,
+                "flex items-center gap-2 p-4 rounded-t-xl border-2 border-b-0",
+                column.headerBg,
                 column.borderColor
               )}>
                 <Icon className={cn("w-5 h-5", column.color)} />
-                <h2 className={cn("font-semibold", column.color)}>
+                <h2 className={cn("font-bold text-sm", column.color)}>
                   {column.title}
                 </h2>
                 <span className={cn(
-                  "ml-auto px-2 py-0.5 rounded-full text-xs font-medium",
-                  column.bgColor,
+                  "ml-auto w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center",
+                  column.headerBg,
                   column.color
                 )}>
                   {columnItems.length}
                 </span>
               </div>
 
-              {/* Items */}
-              <div className="space-y-3">
+              {/* Items Container */}
+              <div className={cn(
+                "flex-1 rounded-b-xl border-2 border-t-0 bg-card p-3 space-y-3 min-h-[200px]",
+                column.borderColor
+              )}>
                 {columnItems.length === 0 ? (
                   <p className="text-center text-muted-foreground text-sm py-8">
                     Nenhum item ainda
@@ -235,33 +240,38 @@ export default function RoadmapPage() {
                     const isVoting = votingItemId === item.id;
 
                     return (
-                      <Card key={item.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <h3 className="font-medium mb-1">{item.title}</h3>
-                          {item.description && (
-                            <p className="text-sm text-muted-foreground mb-3">
-                              {item.description}
-                            </p>
-                          )}
+                      <div 
+                        key={item.id} 
+                        className="bg-background rounded-xl border p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex gap-3">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
+                            {item.description && (
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
                           <button
                             onClick={() => handleVote(item.id)}
                             disabled={isVoting}
                             className={cn(
-                              "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                              "flex flex-col items-center justify-center min-w-[60px] px-3 py-2 rounded-lg border-2 transition-all",
                               hasVoted
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                                ? "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-600"
+                                : "border-muted-foreground/20 hover:border-muted-foreground/40 text-muted-foreground"
                             )}
                           >
                             {isVoting ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                              <ThumbsUp className={cn("w-4 h-4", hasVoted && "fill-current")} />
+                              <ThumbsUp className={cn("w-5 h-5", hasVoted && "fill-green-500")} />
                             )}
-                            {item.votes_count}
+                            <span className="text-xs font-bold mt-1">{item.votes_count}</span>
                           </button>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </div>
                     );
                   })
                 )}
