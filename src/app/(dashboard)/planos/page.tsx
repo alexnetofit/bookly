@@ -3,8 +3,16 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@/hooks/useUser";
 import { Card, CardContent, Button, Skeleton } from "@/components/ui";
-import { Check, Sparkles, Rocket, Crown, Loader2, Receipt, ExternalLink } from "lucide-react";
+import { Check, Sparkles, Rocket, Crown, Loader2, Receipt, ExternalLink, Calendar, AlertCircle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Mapeamento de nomes dos planos
+const planNames: Record<string, string> = {
+  explorer: "Explorador de Páginas",
+  traveler: "Viajante de Histórias",
+  devourer: "Devorador de Mundos",
+  free: "Grátis",
+};
 
 interface Invoice {
   id: string;
@@ -104,18 +112,27 @@ const plans = [
   },
 ];
 
+interface SubscriptionStatus {
+  status: string;
+  cancel_at_period_end: boolean;
+  current_period_end: number | null;
+}
+
 export default function PlanosPage() {
-  const { profile, isLoading: profileLoading } = useUser();
+  const { profile, isLoading: profileLoading, refetch } = useUser();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [loadingCancel, setLoadingCancel] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const currentPlan = profile?.plan || "free";
   const isSubscriptionActive = profile?.subscription_expires_at 
     ? new Date(profile.subscription_expires_at) > new Date() 
     : false;
 
-  // Buscar histórico de faturas
+  // Buscar histórico de faturas e status da subscription
   useEffect(() => {
     const fetchInvoices = async () => {
       setLoadingInvoices(true);
@@ -132,10 +149,49 @@ export default function PlanosPage() {
       }
     };
 
+    const fetchSubscriptionStatus = async () => {
+      try {
+        const response = await fetch("/api/stripe/subscription-status");
+        const data = await response.json();
+        if (data.status) {
+          setSubscriptionStatus(data);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar status:", error);
+      }
+    };
+
     if (profile) {
       fetchInvoices();
+      if (profile.stripe_subscription_id) {
+        fetchSubscriptionStatus();
+      }
     }
   }, [profile]);
+
+  const handleCancelSubscription = async () => {
+    setLoadingCancel(true);
+    try {
+      const response = await fetch("/api/stripe/cancel", {
+        method: "POST",
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setSubscriptionStatus(prev => prev ? { ...prev, cancel_at_period_end: true } : null);
+        setShowCancelConfirm(false);
+        alert("Assinatura cancelada com sucesso. Você terá acesso até o final do período.");
+        refetch();
+      } else {
+        alert(data.error || "Erro ao cancelar assinatura");
+      }
+    } catch (error) {
+      console.error("Erro:", error);
+      alert("Erro de conexão. Tente novamente.");
+    } finally {
+      setLoadingCancel(false);
+    }
+  };
 
   // Mostrar loading enquanto profile carrega
   if (profileLoading || !profile) {
@@ -202,15 +258,115 @@ export default function PlanosPage() {
 
       {/* Current Plan Info */}
       {isSubscriptionActive && profile?.subscription_expires_at && (
-        <div className="max-w-md mx-auto">
+        <div className="max-w-xl mx-auto">
           <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="p-4 text-center">
-              <p className="text-sm text-muted-foreground">
-                Seu plano atual: <span className="font-semibold text-foreground capitalize">{currentPlan}</span>
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Válido até {formatExpirationDate(profile.subscription_expires_at)}
-              </p>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {/* Status Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-semibold">Assinatura Ativa</span>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                    {planNames[currentPlan] || currentPlan}
+                  </span>
+                </div>
+
+                {/* Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div className="flex items-center gap-3 text-sm">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Válido até</p>
+                      <p className="font-medium">{formatExpirationDate(profile.subscription_expires_at)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-sm">
+                    {subscriptionStatus?.cancel_at_period_end ? (
+                      <>
+                        <XCircle className="w-4 h-4 text-orange-500" />
+                        <div>
+                          <p className="text-muted-foreground">Renovação</p>
+                          <p className="font-medium text-orange-600">Cancelada</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4 text-green-500" />
+                        <div>
+                          <p className="text-muted-foreground">Renovação</p>
+                          <p className="font-medium text-green-600">Automática</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Cancel Button */}
+                {!subscriptionStatus?.cancel_at_period_end && (
+                  <div className="pt-4 border-t">
+                    {!showCancelConfirm ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => setShowCancelConfirm(true)}
+                      >
+                        Cancelar assinatura
+                      </Button>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-2 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20">
+                          <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-orange-800 dark:text-orange-200">
+                            Você terá acesso ao plano até {formatExpirationDate(profile.subscription_expires_at)}. 
+                            Após essa data, voltará ao plano gratuito.
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={loadingCancel}
+                            onClick={handleCancelSubscription}
+                          >
+                            {loadingCancel ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Cancelando...
+                              </>
+                            ) : (
+                              "Confirmar Cancelamento"
+                            )}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowCancelConfirm(false)}
+                          >
+                            Voltar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Cancellation Notice */}
+                {subscriptionStatus?.cancel_at_period_end && (
+                  <div className="pt-4 border-t">
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20">
+                      <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-orange-800 dark:text-orange-200">
+                        Sua assinatura foi cancelada e não será renovada. 
+                        Você ainda tem acesso até {formatExpirationDate(profile.subscription_expires_at)}.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
