@@ -43,6 +43,8 @@ export function BookForm({ book, mode }: BookFormProps) {
   const { showToast } = useToast();
   const { user, profile, isLoading: isProfileLoading } = useUser();
 
+  // === TODOS OS HOOKS DEVEM VIR PRIMEIRO (antes de qualquer early return) ===
+  
   const [isLoading, setIsLoading] = useState(false);
   const [bookCount, setBookCount] = useState<number | null>(null);
   const [checkingLimit, setCheckingLimit] = useState(mode === "create");
@@ -52,7 +54,39 @@ export function BookForm({ book, mode }: BookFormProps) {
   const [genreOptions, setGenreOptions] = useState<{ value: string; label: string }[]>([
     { value: "", label: "Selecione um gênero" },
   ]);
+  
+  // Form data state
+  const [formData, setFormData] = useState({
+    nome_do_livro: book?.nome_do_livro || "",
+    autor: book?.autor || "",
+    numero_de_paginas: book?.numero_de_paginas?.toString() || "",
+    descricao: book?.descricao || "",
+    rating: book?.rating || 0,
+    status_leitura: book?.status_leitura || "nao_comecou",
+    paginas_lidas: book?.paginas_lidas?.toString() || "0",
+    formato: book?.formato || "fisico",
+    genero: book?.genero || "",
+    data_inicio: book?.data_inicio || "",
+    data_termino: book?.data_termino || "",
+  });
 
+  // Estado para capa do livro
+  const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(
+    book?.cover_url || null
+  );
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(book?.cover_url || null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  // Estados para postagem na comunidade
+  const [postToCommunity, setPostToCommunity] = useState(false);
+  const [hasSpoiler, setHasSpoiler] = useState(false);
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // === EFFECTS ===
+  
   // Buscar gêneros do banco
   useEffect(() => {
     const fetchGenres = async () => {
@@ -94,6 +128,8 @@ export function BookForm({ book, mode }: BookFormProps) {
     }
   }, [user, mode, supabase, isProfileLoading]);
 
+  // === COMPUTED VALUES ===
+  
   // Verificar se usuário tem plano premium ativo
   const isPremium = profile?.plan && 
     profile.plan !== "free" && 
@@ -105,6 +141,8 @@ export function BookForm({ book, mode }: BookFormProps) {
   // Aguardar profile e contagem de livros carregarem antes de verificar limite
   const isCheckingAccess = mode === "create" && (isProfileLoading || checkingLimit);
 
+  // === EARLY RETURNS (depois de todos os hooks) ===
+  
   // Mostrar loading enquanto verifica acesso
   if (isCheckingAccess) {
     return (
@@ -153,34 +191,8 @@ export function BookForm({ book, mode }: BookFormProps) {
       </div>
     );
   }
-  const [formData, setFormData] = useState({
-    nome_do_livro: book?.nome_do_livro || "",
-    autor: book?.autor || "",
-    numero_de_paginas: book?.numero_de_paginas?.toString() || "",
-    descricao: book?.descricao || "",
-    rating: book?.rating || 0,
-    status_leitura: book?.status_leitura || "nao_comecou",
-    paginas_lidas: book?.paginas_lidas?.toString() || "0",
-    formato: book?.formato || "fisico",
-    genero: book?.genero || "",
-    data_inicio: book?.data_inicio || "",
-    data_termino: book?.data_termino || "",
-  });
 
-  // Estado para capa do livro
-  const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(
-    book?.cover_url || null
-  );
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(book?.cover_url || null);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const coverInputRef = useRef<HTMLInputElement>(null);
-
-  // Estados para postagem na comunidade
-  const [postToCommunity, setPostToCommunity] = useState(false);
-  const [hasSpoiler, setHasSpoiler] = useState(false);
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // === FUNCTIONS ===
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
