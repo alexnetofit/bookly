@@ -209,10 +209,3 @@ export async function POST(request: Request) {
   return NextResponse.json({ received: true });
 }
 
-// Desabilitar parsing do body (necessário para verificar assinatura)
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
