@@ -68,7 +68,7 @@ export async function POST(request: Request) {
         );
 
         if (currentSubscription.status === "active") {
-          // Fazer upgrade/downgrade com proration
+          // Fazer upgrade/downgrade com proration e cobrança imediata
           const updatedSubscription = await stripe.subscriptions.update(
             profile.stripe_subscription_id,
             {
@@ -78,7 +78,8 @@ export async function POST(request: Request) {
                   price: priceId,
                 },
               ],
-              proration_behavior: "create_prorations",
+              proration_behavior: "always_invoice", // Gera invoice imediatamente
+              payment_behavior: "error_if_incomplete", // Falha se pagamento não processar
               metadata: {
                 user_id: user.id,
                 plan: plan,
@@ -86,7 +87,35 @@ export async function POST(request: Request) {
             }
           );
 
-          // Atualizar plano no Supabase imediatamente
+          // Buscar e pagar a invoice pendente imediatamente
+          const invoices = await stripe.invoices.list({
+            subscription: updatedSubscription.id,
+            status: "open",
+            limit: 1,
+          });
+
+          if (invoices.data.length > 0) {
+            try {
+              await stripe.invoices.pay(invoices.data[0].id);
+            } catch (payError) {
+              // Se falhar o pagamento, reverter a subscription
+              console.error("Erro ao cobrar invoice:", payError);
+              await stripe.subscriptions.update(profile.stripe_subscription_id, {
+                items: [
+                  {
+                    id: updatedSubscription.items.data[0].id,
+                    price: currentSubscription.items.data[0].price.id,
+                  },
+                ],
+              });
+              return NextResponse.json(
+                { error: "Falha no pagamento. Verifique seu cartão e tente novamente." },
+                { status: 400 }
+              );
+            }
+          }
+
+          // Atualizar plano no Supabase após pagamento confirmado
           const PLAN_DURATIONS: Record<string, number> = {
             explorer: 3,
             traveler: 6,
