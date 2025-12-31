@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      mode: "payment",
+      mode: "subscription",
       customer_email: user.email,
       line_items: [
         {
@@ -63,6 +63,12 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
+      subscription_data: {
+        metadata: {
+          user_id: user.id,
+          plan: plan,
+        },
+      },
       metadata: {
         user_id: user.id,
         plan: plan,
