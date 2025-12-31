@@ -17,10 +17,10 @@ const plans = [
       "Até 3 livros na estante",
       "Acompanhamento de leitura",
       "Estatísticas básicas",
+      "Metas de leitura anuais",
     ],
     limitations: [
       "Sem acesso à comunidade",
-      "Sem metas anuais",
     ],
     icon: Sparkles,
     color: "text-gray-500",

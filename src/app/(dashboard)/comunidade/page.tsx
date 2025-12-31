@@ -2,14 +2,15 @@
 
 import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 
 export const dynamicConfig = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { PostCard } from "@/components/features/post-card";
-import { Button, Skeleton, EmptyState } from "@/components/ui";
+import { Button, Skeleton, EmptyState, Card, CardContent } from "@/components/ui";
 import type { CommunityPost, UserProfile } from "@/types/database";
-import { Plus, Users, RefreshCw, Feather } from "lucide-react";
+import { Plus, Users, RefreshCw, Feather, Lock, Crown } from "lucide-react";
 
 // Lazy load modals for better performance
 const CreatePostModal = dynamic(
@@ -35,6 +36,44 @@ export default function ComunidadePage() {
 
   const supabase = createClient();
   const { profile } = useUser();
+
+  // Verificar se usuário tem plano premium
+  const paidPlans = ["explorer", "traveler", "devourer"];
+  const isPremium = profile?.plan && 
+    paidPlans.includes(profile.plan) && 
+    profile.subscription_expires_at && 
+    new Date(profile.subscription_expires_at) > new Date();
+
+  // Mostrar tela de bloqueio para usuários grátis
+  if (profile && !isPremium) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="w-full max-w-md border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20">
+          <CardContent className="p-8 text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto">
+              <Lock className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">Comunidade Premium</h2>
+              <p className="text-muted-foreground">
+                A comunidade é exclusiva para assinantes. Faça upgrade para interagir com outros leitores!
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Link href="/planos">
+                <Button size="lg" className="w-full">
+                  <Crown className="w-4 h-4 mr-2" />
+                  Ver Planos Premium
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const fetchPosts = useCallback(async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) {
