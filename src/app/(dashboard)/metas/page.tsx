@@ -214,8 +214,8 @@ export default function MetasPage() {
         </p>
       </div>
 
-      {/* Goal Cards - 1 column mobile, 2 columns desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Goal Cards - 2 columns always */}
+      <div className="grid grid-cols-2 gap-3 md:gap-4">
         {[currentYear, nextYear].map((year) => {
           const data = yearData[year];
           const progress = getProgress(year);
@@ -231,71 +231,70 @@ export default function MetasPage() {
                   : "from-blue-500/10 via-blue-500/5 to-transparent border-blue-500/20"
               }`}
             >
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Target className={`w-5 h-5 ${isCurrentYear ? "text-primary" : "text-blue-500"}`} />
-                  Meta {year}
+              <CardHeader className="flex flex-row items-center justify-between p-3 md:p-6 pb-2">
+                <CardTitle className="flex items-center gap-1.5 text-sm md:text-base">
+                  <Target className={`w-4 h-4 md:w-5 md:h-5 ${isCurrentYear ? "text-primary" : "text-blue-500"}`} />
+                  <span className="hidden sm:inline">Meta</span> {year}
                 </CardTitle>
                 {!data.isEditing && (
                   <Button 
                     variant="ghost" 
                     size="sm"
+                    className="h-7 px-2 text-xs md:text-sm md:h-9 md:px-3"
                     onClick={() => updateYearData(year, { isEditing: true })}
                   >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    {data.goal ? "Editar" : "Definir"}
+                    <Edit2 className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                    <span className="hidden sm:inline">{data.goal ? "Editar" : "Definir"}</span>
                   </Button>
                 )}
               </CardHeader>
-              <CardContent className="space-y-5">
+              <CardContent className="space-y-3 md:space-y-5 p-3 md:p-6 pt-0 md:pt-0">
                 {data.isEditing ? (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Quantos livros você quer ler em {year}?
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs md:text-sm font-medium">
+                        Livros em {year}
                       </label>
-                      <div className="flex gap-3">
-                        <Input
-                          type="number"
-                          min="1"
-                          value={data.newGoalAmount}
-                          onChange={(e) => updateYearData(year, { newGoalAmount: e.target.value })}
-                          placeholder="Ex: 24"
-                          className="max-w-[120px]"
-                        />
-                        <span className="flex items-center text-muted-foreground">livros</span>
-                      </div>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={data.newGoalAmount}
+                        onChange={(e) => updateYearData(year, { newGoalAmount: e.target.value })}
+                        placeholder="24"
+                        className="h-8 text-sm"
+                      />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5">
                       <Button 
                         onClick={() => handleSaveGoal(year)} 
                         isLoading={data.isSaving} 
                         size="sm"
+                        className="h-7 text-xs px-2"
                       >
-                        <Check className="w-4 h-4 mr-1" />
+                        <Check className="w-3 h-3 mr-1" />
                         Salvar
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
+                        className="h-7 text-xs px-2"
                         onClick={() => updateYearData(year, { 
                           isEditing: false, 
                           newGoalAmount: data.goal?.goal_amount.toString() || "" 
                         })}
                       >
-                        <X className="w-4 h-4 mr-1" />
-                        Cancelar
+                        <X className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
                 ) : data.goal ? (
                   <>
                     {/* Main number */}
-                    <div className="text-center py-2">
-                      <p className={`text-5xl font-bold ${isCurrentYear ? "text-primary" : "text-blue-500"}`}>
+                    <div className="text-center py-1 md:py-2">
+                      <p className={`text-3xl md:text-5xl font-bold ${isCurrentYear ? "text-primary" : "text-blue-500"}`}>
                         {data.booksRead}
                       </p>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                         de {data.goal.goal_amount} livros
                       </p>
                     </div>
@@ -305,47 +304,51 @@ export default function MetasPage() {
 
                     {/* Achievement status */}
                     {progress >= 100 ? (
-                      <div className="flex items-center justify-center gap-2 p-3 bg-green-500/10 rounded-lg text-green-600 dark:text-green-400">
-                        <Trophy className="w-5 h-5" />
-                        <span className="font-medium">Parabéns! Meta atingida! 🎉</span>
+                      <div className="flex items-center justify-center gap-1.5 p-2 md:p-3 bg-green-500/10 rounded-lg text-green-600 dark:text-green-400">
+                        <Trophy className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="text-xs md:text-sm font-medium">Meta atingida! 🎉</span>
                       </div>
                     ) : (
-                      <p className="text-center text-muted-foreground">
+                      <p className="text-center text-xs md:text-sm text-muted-foreground">
                         Faltam <span className="font-semibold text-foreground">{remaining}</span> livros
                       </p>
                     )}
 
                     {/* Stats inside card */}
-                    <div className="grid grid-cols-3 gap-2 pt-2 border-t">
+                    <div className="grid grid-cols-3 gap-1 md:gap-2 pt-2 border-t">
                       <div className="text-center">
-                        <div className="w-8 h-8 mx-auto rounded-lg bg-green-500/10 flex items-center justify-center text-green-500 mb-1">
-                          <BookOpen className="w-4 h-4" />
+                        <div className="w-6 h-6 md:w-8 md:h-8 mx-auto rounded-lg bg-green-500/10 flex items-center justify-center text-green-500 mb-0.5 md:mb-1">
+                          <BookOpen className="w-3 h-3 md:w-4 md:h-4" />
                         </div>
-                        <p className="text-lg font-bold">{data.booksRead}</p>
-                        <p className="text-xs text-muted-foreground">Lidos</p>
+                        <p className="text-sm md:text-lg font-bold">{data.booksRead}</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">Lidos</p>
                       </div>
                       <div className="text-center">
-                        <div className={`w-8 h-8 mx-auto rounded-lg ${isCurrentYear ? "bg-primary/10 text-primary" : "bg-blue-500/10 text-blue-500"} flex items-center justify-center mb-1`}>
-                          <Target className="w-4 h-4" />
+                        <div className={`w-6 h-6 md:w-8 md:h-8 mx-auto rounded-lg ${isCurrentYear ? "bg-primary/10 text-primary" : "bg-blue-500/10 text-blue-500"} flex items-center justify-center mb-0.5 md:mb-1`}>
+                          <Target className="w-3 h-3 md:w-4 md:h-4" />
                         </div>
-                        <p className="text-lg font-bold">{data.goal.goal_amount}</p>
-                        <p className="text-xs text-muted-foreground">Meta</p>
+                        <p className="text-sm md:text-lg font-bold">{data.goal.goal_amount}</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">Meta</p>
                       </div>
                       <div className="text-center">
-                        <div className="w-8 h-8 mx-auto rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 mb-1">
-                          <TrendingUp className="w-4 h-4" />
+                        <div className="w-6 h-6 md:w-8 md:h-8 mx-auto rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 mb-0.5 md:mb-1">
+                          <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
                         </div>
-                        <p className="text-lg font-bold">{Math.round(progress)}%</p>
-                        <p className="text-xs text-muted-foreground">Progresso</p>
+                        <p className="text-sm md:text-lg font-bold">{Math.round(progress)}%</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">Progresso</p>
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-8">
-                    <Target className={`w-12 h-12 mx-auto mb-3 ${isCurrentYear ? "text-primary/30" : "text-blue-500/30"}`} />
-                    <p className="text-muted-foreground mb-3">Nenhuma meta definida</p>
-                    <Button onClick={() => updateYearData(year, { isEditing: true })}>
-                      Definir meta
+                  <div className="text-center py-4 md:py-8">
+                    <Target className={`w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 ${isCurrentYear ? "text-primary/30" : "text-blue-500/30"}`} />
+                    <p className="text-xs md:text-sm text-muted-foreground mb-2 md:mb-3">Sem meta definida</p>
+                    <Button 
+                      size="sm"
+                      className="h-7 text-xs md:h-9 md:text-sm"
+                      onClick={() => updateYearData(year, { isEditing: true })}
+                    >
+                      Definir
                     </Button>
                   </div>
                 )}
