@@ -13,10 +13,15 @@ interface UseUserReturn {
   refetch: () => Promise<void>;
 }
 
+// Cache em memória (persiste entre navegações, limpa no reload)
+let profileCache: UserProfile | null = null;
+let userCache: User | null = null;
+
 export function useUser(): UseUserReturn {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Inicializa com cache em memória (útil para navegação entre páginas)
+  const [user, setUser] = useState<User | null>(userCache);
+  const [profile, setProfile] = useState<UserProfile | null>(profileCache);
+  const [isLoading, setIsLoading] = useState(!profileCache);
   const [supabase] = useState(() => createClient());
 
   const fetchProfile = async (userId: string) => {
@@ -25,13 +30,18 @@ export function useUser(): UseUserReturn {
       .select("*")
       .eq("id", userId)
       .single();
-    setProfile(data);
+    
+    if (data) {
+      setProfile(data);
+      profileCache = data; // Salva no cache em memória
+    }
   };
 
   const refetch = async () => {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     if (currentUser) {
       setUser(currentUser);
+      userCache = currentUser;
       await fetchProfile(currentUser.id);
     }
   };
@@ -41,7 +51,14 @@ export function useUser(): UseUserReturn {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
+        userCache = session.user;
         fetchProfile(session.user.id);
+      } else {
+        // Limpa cache se não há sessão
+        userCache = null;
+        profileCache = null;
+        setUser(null);
+        setProfile(null);
       }
       setIsLoading(false);
     });
@@ -51,8 +68,11 @@ export function useUser(): UseUserReturn {
       (event, session) => {
         if (session?.user) {
           setUser(session.user);
+          userCache = session.user;
           fetchProfile(session.user.id);
         } else {
+          userCache = null;
+          profileCache = null;
           setUser(null);
           setProfile(null);
         }
