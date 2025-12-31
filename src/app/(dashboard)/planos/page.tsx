@@ -120,11 +120,11 @@ export default function PlanosPage() {
         window.location.href = data.url;
       } else {
         console.error("Erro ao criar checkout:", data.error);
-        alert("Erro ao processar pagamento. Tente novamente.");
+        alert(data.error || "Erro ao processar pagamento. Tente novamente.");
       }
     } catch (error) {
       console.error("Erro:", error);
-      alert("Erro ao processar pagamento. Tente novamente.");
+      alert("Erro de conexão. Verifique sua internet e tente novamente.");
     } finally {
       setLoadingPlan(null);
     }
