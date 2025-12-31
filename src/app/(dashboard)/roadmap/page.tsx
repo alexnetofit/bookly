@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { Button, Textarea, Modal, Skeleton } from "@/components/ui";
-import { Sparkles, Clock, Flame, CheckCircle2, Plus, Heart, Send, Loader2 } from "lucide-react";
+import { Clock, Flame, CheckCircle2, Plus, ThumbsUp, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface RoadmapItem {
@@ -183,24 +183,22 @@ export default function RoadmapPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="text-center space-y-3 pb-4">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-          <Sparkles className="w-4 h-4" />
-          Roadmap
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            Nos ajude a construir essa linda história
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Acompanhe o que estamos construindo e vote nas funcionalidades que você mais deseja
+          </p>
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-          O Futuro do Babel
-        </h1>
-        <p className="text-muted-foreground max-w-xl mx-auto">
-          Acompanhe o que estamos construindo e vote nas funcionalidades que você mais deseja
-        </p>
         <Button 
           onClick={() => setShowSuggestionModal(true)}
           variant="outline"
-          className="mt-2"
+          className="shrink-0"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Enviar Sugestão
+          Sugestão
         </Button>
       </div>
 
@@ -272,22 +270,21 @@ export default function RoadmapPage() {
                             onClick={() => handleVote(item.id)}
                             disabled={isVoting}
                             className={cn(
-                              "flex flex-col items-center justify-center gap-1 min-w-[52px] px-3 py-2 rounded-xl transition-all duration-200",
+                              "flex flex-col items-center justify-center gap-0.5 min-w-[56px] py-3 px-3 rounded-xl border-2 transition-all duration-200",
                               hasVoted
-                                ? "bg-primary/10 text-primary"
-                                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                ? "border-primary/30 bg-primary/5 text-primary"
+                                : "border-muted-foreground/15 bg-muted/30 text-muted-foreground hover:border-muted-foreground/30 hover:bg-muted/50"
                             )}
                           >
                             {isVoting ? (
                               <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                              <Heart className={cn(
-                                "w-5 h-5 transition-transform",
-                                hasVoted && "fill-primary scale-110",
-                                !hasVoted && "group-hover:scale-110"
+                              <ThumbsUp className={cn(
+                                "w-5 h-5",
+                                hasVoted && "fill-primary"
                               )} />
                             )}
-                            <span className="text-xs font-bold">{item.votes_count}</span>
+                            <span className="text-sm font-semibold">{item.votes_count}</span>
                           </button>
                         </div>
                       </div>
