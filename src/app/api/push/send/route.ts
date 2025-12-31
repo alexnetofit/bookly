@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
     // Build OneSignal payload
     const onesignalPayload: any = {
       app_id: ONESIGNAL_APP_ID,
-      included_segments: ["Subscribed Users"],
+      included_segments: ["Total Subscriptions"],
+      target_channel: "push",
       headings: { en: notification.title },
       contents: { en: notification.message },
     };
@@ -64,12 +65,12 @@ export async function POST(request: NextRequest) {
         : `${baseUrl}${notification.url}`;
     }
 
-    // Send via OneSignal API
-    const onesignalResponse = await fetch("https://onesignal.com/api/v1/notifications", {
+    // Send via OneSignal API v2
+    const onesignalResponse = await fetch("https://api.onesignal.com/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${ONESIGNAL_REST_API_KEY}`,
+        Authorization: `Key ${ONESIGNAL_REST_API_KEY}`,
       },
       body: JSON.stringify(onesignalPayload),
     });
