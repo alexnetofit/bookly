@@ -5,5 +5,6 @@ export { AdminSubscriptions } from "./admin-subscriptions";
 export { AdminModeration } from "./admin-moderation";
 export { AdminGenres } from "./admin-genres";
 export { AdminRoadmap } from "./admin-roadmap";
+export { AdminNotifications } from "./admin-notifications";
 
 

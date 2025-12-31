@@ -52,6 +52,20 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Babel" />
         <link rel="apple-touch-icon" href="/babel_icon.png" />
+        {/* OneSignal Push Notifications */}
+        <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.OneSignalDeferred = window.OneSignalDeferred || [];
+              OneSignalDeferred.push(async function(OneSignal) {
+                await OneSignal.init({
+                  appId: "08f3fddf-80e6-400f-bea2-37192943f7b2",
+                });
+              });
+            `,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
