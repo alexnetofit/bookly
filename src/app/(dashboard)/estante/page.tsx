@@ -125,7 +125,7 @@ export default function EstantePage() {
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 md:flex-[3]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por título ou autor..."
@@ -140,7 +140,8 @@ export default function EstantePage() {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             options={sortOptions}
-            className="w-full md:w-48"
+            className="w-full md:w-52 md:flex-shrink-0"
+            searchable={false}
           />
 
           {/* Filter toggle */}
