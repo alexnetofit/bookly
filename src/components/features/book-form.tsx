@@ -1,14 +1,18 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
-import { Button, Input, Textarea, Select, StarRating } from "@/components/ui";
+import { useUser } from "@/hooks/useUser";
+import { Button, Input, Textarea, Select, StarRating, Card, CardContent } from "@/components/ui";
 import { BookSearch } from "./book-search";
 import type { Book, ReadingStatus, BookSearchResult, BookFormat } from "@/types/database";
-import { Save, ArrowLeft, Search, PenLine, Users, AlertTriangle, Upload, X, ImageIcon } from "lucide-react";
+import { Save, ArrowLeft, Search, PenLine, Users, AlertTriangle, Upload, X, ImageIcon, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const FREE_BOOK_LIMIT = 3;
 
 interface BookFormProps {
   book?: Book;
@@ -64,11 +68,80 @@ export function BookForm({ book, mode }: BookFormProps) {
   const router = useRouter();
   const supabase = createClient();
   const { showToast } = useToast();
+  const { user, profile } = useUser();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [bookCount, setBookCount] = useState<number | null>(null);
+  const [checkingLimit, setCheckingLimit] = useState(mode === "create");
   const [inputMode, setInputMode] = useState<InputMode>(
     mode === "edit" ? "manual" : "search"
   );
+
+  // Verificar se usuário atingiu limite de livros (apenas para criação)
+  useEffect(() => {
+    const checkBookLimit = async () => {
+      if (mode !== "create" || !user) return;
+      
+      const { count } = await supabase
+        .from("books")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      
+      setBookCount(count || 0);
+      setCheckingLimit(false);
+    };
+
+    if (user) {
+      checkBookLimit();
+    }
+  }, [user, mode, supabase]);
+
+  // Verificar se usuário tem plano premium ativo
+  const isPremium = profile?.plan && 
+    profile.plan !== "free" && 
+    profile.subscription_expires_at && 
+    new Date(profile.subscription_expires_at) > new Date();
+
+  const hasReachedLimit = !isPremium && bookCount !== null && bookCount >= FREE_BOOK_LIMIT;
+
+  // Mostrar tela de limite atingido
+  if (mode === "create" && !checkingLimit && hasReachedLimit) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Button variant="ghost" onClick={() => router.back()}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar
+        </Button>
+
+        <Card className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20">
+          <CardContent className="p-8 text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto">
+              <Lock className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">Limite de Livros Atingido</h2>
+              <p className="text-muted-foreground">
+                Você já tem {bookCount} livros na sua estante. 
+                O plano gratuito permite até {FREE_BOOK_LIMIT} livros.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Faça upgrade para um plano premium e adicione livros ilimitados!
+              </p>
+              <Link href="/planos">
+                <Button size="lg" className="w-full sm:w-auto">
+                  Ver Planos Premium
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   const [formData, setFormData] = useState({
     nome_do_livro: book?.nome_do_livro || "",
     autor: book?.autor || "",

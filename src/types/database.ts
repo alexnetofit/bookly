@@ -2,7 +2,7 @@ export type ReadingStatus = "nao_comecou" | "lendo" | "lido" | "desistido";
 
 export type BookFormat = "fisico" | "ebook" | "audiobook";
 
-export type PlanType = "mensal" | "trimestral" | "semestral" | "anual" | "explorer" | "traveler" | "devourer" | null;
+export type PlanType = "free" | "explorer" | "traveler" | "devourer" | null;
 
 export interface BookSearchResult {
   id: string;
