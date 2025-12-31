@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useUser } from "@/hooks/useUser";
-import { Card, CardContent, Button } from "@/components/ui";
+import { Card, CardContent, Button, Skeleton } from "@/components/ui";
 import { Check, Sparkles, Rocket, Crown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -94,13 +94,30 @@ const plans = [
 ];
 
 export default function PlanosPage() {
-  const { profile } = useUser();
+  const { profile, isLoading: profileLoading } = useUser();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const currentPlan = profile?.plan || "free";
   const isSubscriptionActive = profile?.subscription_expires_at 
     ? new Date(profile.subscription_expires_at) > new Date() 
     : false;
+
+  // Mostrar loading enquanto profile carrega
+  if (profileLoading || !profile) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center space-y-4">
+          <Skeleton className="h-10 w-64 mx-auto" />
+          <Skeleton className="h-6 w-96 mx-auto" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-96 w-full rounded-lg" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const handleCheckout = async (planId: string) => {
     if (planId === "free") return;
