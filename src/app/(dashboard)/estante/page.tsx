@@ -183,7 +183,7 @@ export default function EstantePage() {
 
         {/* Filter panel */}
         {showFilters && (
-          <div className="flex flex-wrap gap-4 p-4 bg-muted/50 rounded-lg animate-fade-in">
+          <div className="relative z-50 flex flex-wrap gap-4 p-4 bg-muted/50 rounded-lg animate-fade-in">
             <div className="flex-1 min-w-[200px]">
               <label className="text-sm font-medium mb-1.5 block">Status</label>
               <Select
