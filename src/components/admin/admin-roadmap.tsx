@@ -61,13 +61,35 @@ export function AdminRoadmap() {
 
       if (itemsData) setItems(itemsData);
 
-      // Fetch suggestions with user info
-      const { data: suggestionsData } = await supabase
+      // Fetch suggestions
+      const { data: suggestionsData, error: suggestionsError } = await supabase
         .from("roadmap_suggestions")
-        .select("*, user_profile:users_profile(full_name, email)")
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (suggestionsData) setSuggestions(suggestionsData);
+      if (suggestionsError) {
+        console.error("Erro ao buscar sugestões:", suggestionsError);
+      }
+
+      if (suggestionsData && suggestionsData.length > 0) {
+        // Fetch user profiles separately
+        const userIds = [...new Set(suggestionsData.map((s) => s.user_id))];
+        const { data: profilesData } = await supabase
+          .from("users_profile")
+          .select("id, full_name, email")
+          .in("id", userIds);
+
+        const profilesMap = new Map(profilesData?.map((p) => [p.id, p]) || []);
+
+        const suggestionsWithProfiles = suggestionsData.map((s) => ({
+          ...s,
+          user_profile: profilesMap.get(s.user_id) || null,
+        }));
+
+        setSuggestions(suggestionsWithProfiles);
+      } else {
+        setSuggestions([]);
+      }
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
     } finally {

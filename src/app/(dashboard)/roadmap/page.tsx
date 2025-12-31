@@ -270,10 +270,10 @@ export default function RoadmapPage() {
                             onClick={() => handleVote(item.id)}
                             disabled={isVoting}
                             className={cn(
-                              "flex flex-col items-center justify-center gap-0.5 min-w-[56px] py-3 px-3 rounded-xl border-2 transition-all duration-200",
+                              "flex flex-col items-center justify-center gap-0.5 w-16 h-16 rounded-lg border-2 transition-all duration-200",
                               hasVoted
-                                ? "border-primary/30 bg-primary/5 text-primary"
-                                : "border-muted-foreground/15 bg-muted/30 text-muted-foreground hover:border-muted-foreground/30 hover:bg-muted/50"
+                                ? "border-[#7CB342] bg-[#7CB342]/10 text-[#7CB342]"
+                                : "border-muted-foreground/20 bg-muted/40 text-muted-foreground hover:border-muted-foreground/30"
                             )}
                           >
                             {isVoting ? (
@@ -281,10 +281,10 @@ export default function RoadmapPage() {
                             ) : (
                               <ThumbsUp className={cn(
                                 "w-5 h-5",
-                                hasVoted && "fill-primary"
+                                hasVoted && "fill-[#7CB342]"
                               )} />
                             )}
-                            <span className="text-sm font-semibold">{item.votes_count}</span>
+                            <span className="text-sm font-bold">{item.votes_count}</span>
                           </button>
                         </div>
                       </div>
