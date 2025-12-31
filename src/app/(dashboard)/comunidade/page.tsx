@@ -35,7 +35,7 @@ export default function ComunidadePage() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const supabase = createClient();
-  const { profile } = useUser();
+  const { profile, isLoading: profileLoading } = useUser();
 
   // Verificar se usuário tem plano premium
   const paidPlans = ["explorer", "traveler", "devourer"];
@@ -73,6 +73,18 @@ export default function ComunidadePage() {
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
+
+  // Mostrar loading enquanto profile carrega
+  if (profileLoading) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-4 p-4">
+        <Skeleton className="h-14 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
 
   // Mostrar tela de bloqueio para usuários grátis (depois de todos os hooks)
   if (profile && !isPremium) {
