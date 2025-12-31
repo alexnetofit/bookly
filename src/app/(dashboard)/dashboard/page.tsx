@@ -513,20 +513,50 @@ function PostsList({ posts }: { posts: CommunityPost[] }) {
   }
 
   return (
-    <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+    <div className="space-y-3 max-h-[60vh] overflow-y-auto">
       {posts.map((post) => (
         <div 
           key={post.id} 
-          className="p-3 rounded-lg bg-muted/50"
+          className="p-4 rounded-lg bg-muted/50 space-y-3"
         >
-          <p className="font-medium line-clamp-2">{post.content}</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {new Date(post.created_at).toLocaleDateString("pt-BR", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })}
-          </p>
+          {/* Livro associado */}
+          {post.book_title && (
+            <div className="flex items-center gap-3 pb-3 border-b border-border/50">
+              {post.book_cover_url ? (
+                <img 
+                  src={post.book_cover_url} 
+                  alt={post.book_title} 
+                  className="w-10 h-14 object-cover rounded shadow-sm" 
+                />
+              ) : (
+                <div className="w-10 h-14 bg-muted rounded flex items-center justify-center">
+                  <Book className="w-5 h-5 text-muted-foreground" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{post.book_title}</p>
+                <p className="text-xs text-muted-foreground truncate">{post.book_author}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Conteúdo do post */}
+          <p className="text-sm">{post.content}</p>
+
+          {/* Rodapé */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>
+              {new Date(post.created_at).toLocaleDateString("pt-BR", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              })}
+            </span>
+            <div className="flex items-center gap-3">
+              <span>❤️ {post.likes_count}</span>
+              <span>💬 {post.comments_count}</span>
+            </div>
+          </div>
         </div>
       ))}
     </div>
