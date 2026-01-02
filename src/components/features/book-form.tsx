@@ -251,6 +251,18 @@ export function BookForm({ book, mode }: BookFormProps) {
         statusLeitura = "lido";
       }
 
+      // Calcular finished_at com fuso horário local do usuário
+      let finished_at: string | null = null;
+      if (statusLeitura === "lido") {
+        if (formData.data_termino) {
+          // Usar data de término com hora 23:59 no fuso local
+          finished_at = new Date(formData.data_termino + 'T23:59:59').toISOString();
+        } else {
+          // Usar data/hora atual (fuso local do dispositivo)
+          finished_at = new Date().toISOString();
+        }
+      }
+
       const bookData = {
         nome_do_livro: formData.nome_do_livro.trim(),
         autor: formData.autor.trim(),
@@ -264,6 +276,7 @@ export function BookForm({ book, mode }: BookFormProps) {
         genero: formData.genero.trim() || null,
         data_inicio: formData.data_inicio || null,
         data_termino: statusLeitura === "lido" && formData.data_termino ? formData.data_termino : null,
+        finished_at: finished_at,
       };
 
       if (mode === "create") {

@@ -108,6 +108,8 @@ export default function BookDetailPage() {
       // Auto-update status
       if (pages === book.numero_de_paginas && book.status_leitura !== "lido") {
         updates.status_leitura = "lido";
+        // Enviar finished_at com data/hora atual no fuso local do usuário
+        updates.finished_at = new Date().toISOString();
       } else if (pages > 0 && book.status_leitura === "nao_comecou") {
         updates.status_leitura = "lendo";
       }
