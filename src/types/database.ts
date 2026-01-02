@@ -171,6 +171,7 @@ export interface DashboardData {
   unique_authors: number;
   unique_genres: number;
   posts_year?: number;
+  abandoned_year?: number;
   available_years?: number[];
 }
 

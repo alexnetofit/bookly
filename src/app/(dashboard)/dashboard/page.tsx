@@ -165,6 +165,7 @@ export default function DashboardPage() {
   const booksReadThisYear = dashboardData?.yearly?.books_read ?? 0;
   const pagesReadThisYear = dashboardData?.yearly?.pages_read ?? 0;
   const postsThisYear = dashboardData?.posts_year ?? 0;
+  const abandonedThisYear = dashboardData?.abandoned_year ?? 0;
   const goalProgress = goal ? (booksReadThisYear / goal.goal_amount) * 100 : 0;
   
   // Gera opções para o dropdown de anos (inclui ano atual sempre)
@@ -188,7 +189,13 @@ export default function DashboardPage() {
             Aqui está o resumo da sua jornada de leitura
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <Select
+            value={selectedYear.toString()}
+            onChange={(e) => handleYearChange(parseInt(e.target.value))}
+            options={yearOptions}
+            className="w-24 h-10"
+          />
           <ShareDashboard 
             stats={stats ? {
               lido: stats.books_lido,
@@ -218,13 +225,7 @@ export default function DashboardPage() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5 text-primary" />
-              <span>Meta</span>
-              <Select
-                value={selectedYear.toString()}
-                onChange={(e) => handleYearChange(parseInt(e.target.value))}
-                options={yearOptions}
-                className="w-24 h-8 text-base font-bold"
-              />
+              Meta {selectedYear}
             </CardTitle>
             {goal && (
               <p className="text-sm text-muted-foreground mt-1">
@@ -287,8 +288,8 @@ export default function DashboardPage() {
         />
         <StatCard
           icon={<BookX className="w-5 h-5" />}
-          label="Abandonados"
-          value={stats?.books_desistido || 0}
+          label={`Abandonados em ${selectedYear}`}
+          value={abandonedThisYear}
           color="text-red-500"
           bgColor="bg-red-500/10"
           onClick={() => handleOpenModal("abandonados")}

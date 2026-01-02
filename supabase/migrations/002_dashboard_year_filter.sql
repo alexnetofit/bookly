@@ -81,6 +81,14 @@ BEGIN
       WHERE user_id = p_user_id 
         AND EXTRACT(YEAR FROM created_at) = target_year
     ),
+    -- Livros abandonados no ano (baseado em updated_at)
+    'abandoned_year', (
+      SELECT COUNT(*)::INTEGER 
+      FROM public.books 
+      WHERE user_id = p_user_id 
+        AND status_leitura = 'desistido'
+        AND EXTRACT(YEAR FROM updated_at) = target_year
+    ),
     -- Anos disponíveis para o filtro (anos com livros lidos ou metas)
     'available_years', (
       SELECT COALESCE(json_agg(DISTINCT year ORDER BY year DESC), '[]'::json)
