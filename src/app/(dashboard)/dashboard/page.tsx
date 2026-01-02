@@ -5,8 +5,8 @@ import { useEffect, useState, useCallback } from "react";
 export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
-import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton, EmptyState, Button, Modal } from "@/components/ui";
-import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp, MessageCircle, Tag } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton, EmptyState, Button, Modal, Select } from "@/components/ui";
+import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp, MessageCircle, Tag, Calendar } from "lucide-react";
 import Link from "next/link";
 import type { DashboardData, Book as BookType, CommunityPost } from "@/types/database";
 import { ShareDashboard } from "@/components/features/share-dashboard";
@@ -18,8 +18,11 @@ export default function DashboardPage() {
   const { user, profile } = useUser();
   const currentYear = new Date().getFullYear();
   
+  // Estado para o ano selecionado no filtro
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  
   // Inicializa com cache se disponível
-  const cachedData = user ? getDashboardCache(user.id, currentYear) : null;
+  const cachedData = user ? getDashboardCache(user.id, selectedYear) : null;
   
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(cachedData);
   const [isLoading, setIsLoading] = useState(!cachedData);
@@ -30,15 +33,17 @@ export default function DashboardPage() {
   
   const supabase = createClient();
 
-  const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async (year: number, forceRefresh = false) => {
     if (!user) return;
     
-    // Se cache válido para este usuário, não busca novamente
-    const existingCache = getDashboardCache(user.id, currentYear);
-    if (existingCache) {
-      setDashboardData(existingCache);
-      setIsLoading(false);
-      return;
+    // Se cache válido para este usuário e ano, não busca novamente
+    if (!forceRefresh) {
+      const existingCache = getDashboardCache(user.id, year);
+      if (existingCache) {
+        setDashboardData(existingCache);
+        setIsLoading(false);
+        return;
+      }
     }
     
     setIsLoading(true);
@@ -46,7 +51,7 @@ export default function DashboardPage() {
       // Uma única chamada RPC retorna tudo
       const { data, error } = await supabase.rpc('get_dashboard', {
         p_user_id: user.id,
-        p_year: currentYear
+        p_year: year
       });
 
       if (error) throw error;
@@ -55,19 +60,29 @@ export default function DashboardPage() {
       setDashboardData(dashData);
       
       // Salva no cache
-      setDashboardCache(user.id, currentYear, dashData);
+      setDashboardCache(user.id, year, dashData);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [user, currentYear]);
+  }, [user]);
 
   useEffect(() => {
     if (user) {
-      fetchDashboardData();
+      fetchDashboardData(selectedYear);
     }
-  }, [user, fetchDashboardData]);
+  }, [user, selectedYear, fetchDashboardData]);
+
+  // Handler para mudança de ano
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+  };
+
+  // Anos disponíveis para o filtro (do RPC ou default)
+  const availableYears = dashboardData?.available_years?.length 
+    ? dashboardData.available_years 
+    : [currentYear];
 
   // Busca livros por status para o modal
   const fetchBooksForModal = useCallback(async (status: string | null) => {
@@ -145,9 +160,17 @@ export default function DashboardPage() {
   const stats = dashboardData?.stats;
   const goal = dashboardData?.goal;
   const topAuthors = dashboardData?.top_authors || [];
-  // Usa apenas dados do ano atual (yearly_reading_stats), não o total global
+  
+  // Dados do ano selecionado
   const booksReadThisYear = dashboardData?.yearly?.books_read ?? 0;
+  const pagesReadThisYear = dashboardData?.yearly?.pages_read ?? 0;
+  const postsThisYear = dashboardData?.posts_year ?? 0;
   const goalProgress = goal ? (booksReadThisYear / goal.goal_amount) * 100 : 0;
+  
+  // Gera opções para o dropdown de anos (inclui ano atual sempre)
+  const yearOptions = [...new Set([...availableYears, currentYear])]
+    .sort((a, b) => b - a)
+    .map(year => ({ value: year.toString(), label: year.toString() }));
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -195,7 +218,13 @@ export default function DashboardPage() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5 text-primary" />
-              Meta {currentYear}
+              <span>Meta</span>
+              <Select
+                value={selectedYear.toString()}
+                onChange={(e) => handleYearChange(parseInt(e.target.value))}
+                options={yearOptions}
+                className="w-24 h-8 text-base font-bold"
+              />
             </CardTitle>
             {goal && (
               <p className="text-sm text-muted-foreground mt-1">
@@ -230,14 +259,16 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
+        {/* Cards que mudam por ano */}
         <StatCard
           icon={<BookOpen className="w-5 h-5" />}
-          label="Lidos"
-          value={stats?.books_lido || 0}
+          label={`Lidos em ${selectedYear}`}
+          value={booksReadThisYear}
           color="text-green-500"
           bgColor="bg-green-500/10"
           onClick={() => handleOpenModal("lidos")}
         />
+        {/* Cards globais (status atual) */}
         <StatCard
           icon={<Book className="w-5 h-5" />}
           label="Lendo"
@@ -262,17 +293,18 @@ export default function DashboardPage() {
           bgColor="bg-red-500/10"
           onClick={() => handleOpenModal("abandonados")}
         />
+        {/* Cards que mudam por ano */}
         <StatCard
           icon={<FileText className="w-5 h-5" />}
-          label="Páginas lidas"
-          value={stats?.total_pages_read?.toLocaleString("pt-BR") || 0}
+          label={`Páginas em ${selectedYear}`}
+          value={pagesReadThisYear.toLocaleString("pt-BR")}
           color="text-purple-500"
           bgColor="bg-purple-500/10"
           onClick={() => handleOpenModal("paginas")}
         />
         <StatCard
           icon={<Users className="w-5 h-5" />}
-          label="Autores"
+          label={`Autores em ${selectedYear}`}
           value={dashboardData?.unique_authors || 0}
           color="text-orange-500"
           bgColor="bg-orange-500/10"
@@ -280,7 +312,7 @@ export default function DashboardPage() {
         />
         <StatCard
           icon={<Tag className="w-5 h-5" />}
-          label="Gêneros"
+          label={`Gêneros em ${selectedYear}`}
           value={dashboardData?.unique_genres || 0}
           color="text-pink-500"
           bgColor="bg-pink-500/10"
@@ -288,8 +320,8 @@ export default function DashboardPage() {
         />
         <StatCard
           icon={<MessageCircle className="w-5 h-5" />}
-          label="Posts"
-          value={stats?.total_posts || 0}
+          label={`Posts em ${selectedYear}`}
+          value={postsThisYear}
           color="text-cyan-500"
           bgColor="bg-cyan-500/10"
           onClick={() => handleOpenModal("posts")}
@@ -334,7 +366,7 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" />
-            Top 5 Autores Mais Lidos
+            Top 5 Autores Mais Lidos em {selectedYear}
           </CardTitle>
         </CardHeader>
         <CardContent>
