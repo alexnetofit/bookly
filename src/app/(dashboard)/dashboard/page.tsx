@@ -145,7 +145,8 @@ export default function DashboardPage() {
   const stats = dashboardData?.stats;
   const goal = dashboardData?.goal;
   const topAuthors = dashboardData?.top_authors || [];
-  const booksReadThisYear = dashboardData?.yearly?.books_read || stats?.books_lido || 0;
+  // Usa apenas dados do ano atual (yearly_reading_stats), não o total global
+  const booksReadThisYear = dashboardData?.yearly?.books_read ?? 0;
   const goalProgress = goal ? (booksReadThisYear / goal.goal_amount) * 100 : 0;
 
   if (isLoading) {
