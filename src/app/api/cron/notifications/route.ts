@@ -22,24 +22,34 @@ export async function GET(request: Request) {
   try {
     // Buscar notificações agendadas que devem ser enviadas
     const now = new Date().toISOString();
+    console.log("[CRON] Verificando notificações. Now:", now);
+    
     const { data: notifications, error } = await supabase
       .from("push_notifications")
       .select("*")
       .eq("status", "scheduled")
       .lte("scheduled_at", now);
 
+    console.log("[CRON] Query result:", { count: notifications?.length, error: error?.message });
+
     if (error) throw error;
 
     if (!notifications || notifications.length === 0) {
+      console.log("[CRON] Nenhuma notificação pendente");
       return NextResponse.json({ message: "Nenhuma notificação para enviar", sent: 0 });
     }
+    
+    console.log("[CRON] Notificações encontradas:", notifications.map(n => ({ id: n.id, title: n.title, scheduled_at: n.scheduled_at })));
 
     let sentCount = 0;
 
     for (const notification of notifications) {
       try {
         // Enviar notificação via API interna
-        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/push/send`, {
+        const apiUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/push/send`;
+        console.log("[CRON] Enviando para:", apiUrl, "ID:", notification.id);
+        
+        const response = await fetch(apiUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -48,8 +58,11 @@ export async function GET(request: Request) {
           body: JSON.stringify({ notificationId: notification.id }),
         });
 
+        console.log("[CRON] Response status:", response.status);
+
         if (response.ok) {
           sentCount++;
+          console.log("[CRON] Notificação enviada com sucesso:", notification.id);
 
           // Calcular próximo agendamento para notificações recorrentes
           if (notification.recurrence_type !== "once") {
