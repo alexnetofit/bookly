@@ -463,6 +463,11 @@ export default function ComunidadePage() {
           isOpen={!!selectedPostId}
           onClose={() => setSelectedPostId(null)}
           postId={selectedPostId}
+          onCommentsCountChange={(count) => {
+            setPosts(prev => prev.map(p => 
+              p.id === selectedPostId ? { ...p, comments_count: count } : p
+            ));
+          }}
         />
       )}
     </div>

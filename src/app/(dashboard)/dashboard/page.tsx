@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton, EmptyState, Button, Modal, Select } from "@/components/ui";
-import { Book, BookOpen, BookX, Clock, FileText, Users, Target, Plus, TrendingUp, MessageCircle, Tag, Calendar } from "lucide-react";
+import { Book, BookOpen, BookX, Clock, FileText, Users, Target, TrendingUp, MessageCircle, Tag } from "lucide-react";
 import Link from "next/link";
 import type { DashboardData, Book as BookType, CommunityPost } from "@/types/database";
 import { ShareDashboard } from "@/components/features/share-dashboard";
@@ -148,10 +148,13 @@ export default function DashboardPage() {
   const handleOpenModal = (type: ModalType) => {
     setActiveModal(type);
     
+    // Se "Todos" selecionado, não filtra por ano
+    const shouldFilterByYear = !isAllYears;
+    
     switch (type) {
       case "lidos":
         // Filtrar por ano usando finished_at
-        fetchBooksForModal("lido", true, "finished_at");
+        fetchBooksForModal("lido", shouldFilterByYear, "finished_at");
         break;
       case "lendo":
         // Global - sem filtro de ano
@@ -163,17 +166,17 @@ export default function DashboardPage() {
         break;
       case "abandonados":
         // Filtrar por ano usando updated_at
-        fetchBooksForModal("desistido", true, "updated_at");
+        fetchBooksForModal("desistido", shouldFilterByYear, "updated_at");
         break;
       case "paginas":
       case "autores":
       case "generos":
         // Filtrar por ano (livros lidos no ano)
-        fetchBooksForModal("lido", true, "finished_at");
+        fetchBooksForModal("lido", shouldFilterByYear, "finished_at");
         break;
       case "posts":
         // Filtrar por ano
-        fetchPostsForModal(true);
+        fetchPostsForModal(shouldFilterByYear);
         break;
       default:
         break;
@@ -184,17 +187,37 @@ export default function DashboardPage() {
   const goal = dashboardData?.goal;
   const topAuthors = dashboardData?.top_authors || [];
   
-  // Dados do ano selecionado
-  const booksReadThisYear = dashboardData?.yearly?.books_read ?? 0;
-  const pagesReadThisYear = dashboardData?.yearly?.pages_read ?? 0;
-  const postsThisYear = dashboardData?.posts_year ?? 0;
-  const abandonedThisYear = dashboardData?.abandoned_year ?? 0;
+  // Dados do ano selecionado (ou globais se "Todos")
+  const booksReadThisYear = isAllYears 
+    ? (stats?.books_lido ?? 0) 
+    : (dashboardData?.yearly?.books_read ?? 0);
+  const pagesReadThisYear = isAllYears 
+    ? (stats?.total_pages_read ?? 0) 
+    : (dashboardData?.yearly?.pages_read ?? 0);
+  const postsThisYear = isAllYears 
+    ? (stats?.total_posts ?? 0) 
+    : (dashboardData?.posts_year ?? 0);
+  const abandonedThisYear = isAllYears 
+    ? (stats?.books_desistido ?? 0) 
+    : (dashboardData?.abandoned_year ?? 0);
+  const uniqueAuthorsDisplay = isAllYears 
+    ? (stats?.unique_authors ?? 0) 
+    : (dashboardData?.unique_authors ?? 0);
+  const uniqueGenresDisplay = isAllYears 
+    ? (stats?.unique_genres ?? 0) 
+    : (dashboardData?.unique_genres ?? 0);
   const goalProgress = goal ? (booksReadThisYear / goal.goal_amount) * 100 : 0;
   
-  // Gera opções para o dropdown de anos (inclui ano atual sempre)
-  const yearOptions = [...new Set([...availableYears, currentYear])]
-    .sort((a, b) => b - a)
-    .map(year => ({ value: year.toString(), label: year.toString() }));
+  // Gera opções para o dropdown de anos (inclui ano atual e opção "Todos")
+  const yearOptions = [
+    { value: "0", label: "Todos" },
+    ...[...new Set([...availableYears, currentYear])]
+      .sort((a, b) => b - a)
+      .map(year => ({ value: year.toString(), label: year.toString() }))
+  ];
+  
+  // Verifica se está mostrando todos os anos
+  const isAllYears = selectedYear === 0;
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -236,12 +259,6 @@ export default function DashboardPage() {
             booksReadThisYear={booksReadThisYear}
             pagesReadThisYear={pagesReadThisYear}
           />
-          <Link href="/estante/novo">
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar livro
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -251,7 +268,7 @@ export default function DashboardPage() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5 text-primary" />
-              Meta {selectedYear}
+              {isAllYears ? "Meta Geral" : `Meta ${selectedYear}`}
             </CardTitle>
             {goal && (
               <p className="text-sm text-muted-foreground mt-1">
@@ -289,7 +306,7 @@ export default function DashboardPage() {
         {/* Cards que mudam por ano */}
         <StatCard
           icon={<BookOpen className="w-5 h-5" />}
-          label={`Lidos em ${selectedYear}`}
+          label={isAllYears ? "Total Lidos" : `Lidos em ${selectedYear}`}
           value={booksReadThisYear}
           color="text-green-500"
           bgColor="bg-green-500/10"
@@ -314,7 +331,7 @@ export default function DashboardPage() {
         />
         <StatCard
           icon={<BookX className="w-5 h-5" />}
-          label={`Abandonados em ${selectedYear}`}
+          label={isAllYears ? "Total Abandonados" : `Abandonados em ${selectedYear}`}
           value={abandonedThisYear}
           color="text-red-500"
           bgColor="bg-red-500/10"
@@ -323,7 +340,7 @@ export default function DashboardPage() {
         {/* Cards que mudam por ano */}
         <StatCard
           icon={<FileText className="w-5 h-5" />}
-          label={`Páginas em ${selectedYear}`}
+          label={isAllYears ? "Total Páginas" : `Páginas em ${selectedYear}`}
           value={pagesReadThisYear.toLocaleString("pt-BR")}
           color="text-purple-500"
           bgColor="bg-purple-500/10"
@@ -331,23 +348,23 @@ export default function DashboardPage() {
         />
         <StatCard
           icon={<Users className="w-5 h-5" />}
-          label={`Autores em ${selectedYear}`}
-          value={dashboardData?.unique_authors || 0}
+          label={isAllYears ? "Total Autores" : `Autores em ${selectedYear}`}
+          value={uniqueAuthorsDisplay}
           color="text-orange-500"
           bgColor="bg-orange-500/10"
           onClick={() => handleOpenModal("autores")}
         />
         <StatCard
           icon={<Tag className="w-5 h-5" />}
-          label={`Gêneros em ${selectedYear}`}
-          value={dashboardData?.unique_genres || 0}
+          label={isAllYears ? "Total Gêneros" : `Gêneros em ${selectedYear}`}
+          value={uniqueGenresDisplay}
           color="text-pink-500"
           bgColor="bg-pink-500/10"
           onClick={() => handleOpenModal("generos")}
         />
         <StatCard
           icon={<MessageCircle className="w-5 h-5" />}
-          label={`Posts em ${selectedYear}`}
+          label={isAllYears ? "Total Posts" : `Posts em ${selectedYear}`}
           value={postsThisYear}
           color="text-cyan-500"
           bgColor="bg-cyan-500/10"
@@ -393,7 +410,7 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" />
-            Top 5 Autores Mais Lidos em {selectedYear}
+            {isAllYears ? "Top 5 Autores Mais Lidos" : `Top 5 Autores Mais Lidos em ${selectedYear}`}
           </CardTitle>
         </CardHeader>
         <CardContent>

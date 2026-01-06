@@ -54,6 +54,7 @@ export const PostCard = memo(function PostCard({ post, onDelete, onOpenComments,
 
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count);
+  const [commentsCount, setCommentsCount] = useState(post.comments_count);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [spoilerRevealed, setSpoilerRevealed] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -443,7 +444,7 @@ export const PostCard = memo(function PostCard({ post, onDelete, onOpenComments,
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
               >
                 <MessageCircle className="w-[18px] h-[18px]" />
-                <span>{post.comments_count > 0 ? post.comments_count : ""}</span>
+                <span>{commentsCount > 0 ? commentsCount : ""}</span>
               </button>
             </div>
           </div>

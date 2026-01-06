@@ -766,16 +766,14 @@ export function BookForm({ book, mode }: BookFormProps) {
                   <div>
                     <p className="font-medium text-muted-foreground">Postar na Comunidade</p>
                     <p className="text-sm text-muted-foreground">
-                      Recurso exclusivo para assinantes
+                      Faça upgrade para postar na comunidade
                     </p>
                   </div>
                 </div>
-                <Link href="/planos">
-                  <Button variant="outline" size="sm">
-                    <Lock className="w-3 h-3 mr-1" />
-                    Upgrade
-                  </Button>
-                </Link>
+                <span className="text-xs text-amber-600 flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-900/20 rounded-full">
+                  <Lock className="w-3 h-3" />
+                  Premium
+                </span>
               </div>
             )}
           </div>

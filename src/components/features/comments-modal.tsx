@@ -13,6 +13,7 @@ interface CommentsModalProps {
   isOpen: boolean;
   onClose: () => void;
   postId: string;
+  onCommentsCountChange?: (count: number) => void;
 }
 
 interface CommentWithProfile extends PostComment {
@@ -40,7 +41,7 @@ function getInitials(name: string | null | undefined): string {
   return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 }
 
-export function CommentsModal({ isOpen, onClose, postId }: CommentsModalProps) {
+export function CommentsModal({ isOpen, onClose, postId, onCommentsCountChange }: CommentsModalProps) {
   const { user, profile } = useUser();
   const supabase = createClient();
   const { showToast } = useToast();
@@ -74,6 +75,7 @@ export function CommentsModal({ isOpen, onClose, postId }: CommentsModalProps) {
         .order("created_at", { ascending: true });
 
       setComments(data || []);
+      onCommentsCountChange?.(data?.length || 0);
     } catch (error) {
       console.error("Error fetching comments:", error);
     } finally {

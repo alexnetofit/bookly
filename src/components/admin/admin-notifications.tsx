@@ -347,7 +347,7 @@ export function AdminNotifications() {
                           type="date"
                           value={scheduledDate}
                           onChange={(e) => setScheduledDate(e.target.value)}
-                          min={new Date().toISOString().split("T")[0]}
+                          min={new Date().toLocaleDateString("sv-SE")}
                           className="mt-1"
                         />
                       </div>
