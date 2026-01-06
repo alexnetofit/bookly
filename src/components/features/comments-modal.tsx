@@ -228,7 +228,7 @@ export function CommentsModal({ isOpen, onClose, postId }: CommentsModalProps) {
                         )}
                         
                         {user?.id === comment.user_id && editingId !== comment.id && (
-                          <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <div className="ml-auto flex items-center gap-1">
                             <button
                               onClick={() => startEditing(comment)}
                               className="p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
