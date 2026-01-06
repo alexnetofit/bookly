@@ -243,12 +243,17 @@ export function BookForm({ book, mode }: BookFormProps) {
       const coverUrl = await uploadCover(user.id);
 
       const numeroDePaginas = parseInt(formData.numero_de_paginas);
-      const paginasLidas = parseInt(formData.paginas_lidas) || 0;
+      let paginasLidas = parseInt(formData.paginas_lidas) || 0;
 
       // Auto-update status to "lido" if all pages are read
       let statusLeitura = formData.status_leitura as ReadingStatus;
       if (paginasLidas === numeroDePaginas && statusLeitura !== "lido") {
         statusLeitura = "lido";
+      }
+      
+      // Se marcou como lido, forçar todas as páginas como lidas
+      if (statusLeitura === "lido") {
+        paginasLidas = numeroDePaginas;
       }
 
       // Calcular finished_at com fuso horário local do usuário
