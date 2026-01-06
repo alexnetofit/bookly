@@ -190,6 +190,10 @@ export default function DashboardPage() {
   const stats = dashboardData?.stats;
   const goal = dashboardData?.goal;
   const topAuthors = dashboardData?.top_authors || [];
+  const topGenres = dashboardData?.top_genres || [];
+  
+  // Estado para controlar aba ativa (autores/gêneros)
+  const [activeRankingTab, setActiveRankingTab] = useState<"authors" | "genres">("authors");
   
   // Verifica se está mostrando todos os anos
   const isAllYears = selectedYear === 0;
@@ -341,7 +345,7 @@ export default function DashboardPage() {
         {/* Cards que mudam por ano */}
         <StatCard
           icon={<FileText className="w-5 h-5" />}
-          label={isAllYears ? "Total Páginas" : `Páginas em ${selectedYear}`}
+          label={isAllYears ? "Total de Páginas lidas" : `Páginas lidas em ${selectedYear}`}
           value={pagesReadThisYear.toLocaleString("pt-BR")}
           color="text-purple-500"
           bgColor="bg-purple-500/10"
@@ -349,7 +353,7 @@ export default function DashboardPage() {
         />
         <StatCard
           icon={<Users className="w-5 h-5" />}
-          label={isAllYears ? "Total Autores" : `Autores em ${selectedYear}`}
+          label={isAllYears ? "Total de Autores cadastrados" : `Autores cadastrados em ${selectedYear}`}
           value={uniqueAuthorsDisplay}
           color="text-orange-500"
           bgColor="bg-orange-500/10"
@@ -357,7 +361,7 @@ export default function DashboardPage() {
         />
         <StatCard
           icon={<Tag className="w-5 h-5" />}
-          label={isAllYears ? "Total Gêneros" : `Gêneros em ${selectedYear}`}
+          label={isAllYears ? "Total de Gêneros cadastrados" : `Gêneros cadastrados em ${selectedYear}`}
           value={uniqueGenresDisplay}
           color="text-pink-500"
           bgColor="bg-pink-500/10"
@@ -406,50 +410,113 @@ export default function DashboardPage() {
         {isLoadingModal ? <ModalSkeleton /> : <PostsList posts={modalPosts} />}
       </Modal>
 
-      {/* Author Ranking */}
+      {/* Author/Genre Ranking with Tabs */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <TrendingUp className="w-5 h-5 text-primary" />
-            {isAllYears ? "Top 5 Autores Mais Lidos" : `Top 5 Autores Mais Lidos em ${selectedYear}`}
-          </CardTitle>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveRankingTab("authors")}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  activeRankingTab === "authors"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                Top 5 Autores
+              </button>
+              <button
+                onClick={() => setActiveRankingTab("genres")}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  activeRankingTab === "genres"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                Top 5 Gêneros
+              </button>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isAllYears ? "Mais lidos (todos os anos)" : `Mais lidos em ${selectedYear}`}
+          </p>
         </CardHeader>
         <CardContent>
-          {topAuthors.length > 0 ? (
-            <div className="space-y-3">
-              {topAuthors.map((author, index) => (
-                <div
-                  key={author.author}
-                  className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
-                >
-                  <span
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                      index === 0
-                        ? "bg-yellow-500/20 text-yellow-600"
-                        : index === 1
-                        ? "bg-gray-400/20 text-gray-600"
-                        : index === 2
-                        ? "bg-amber-600/20 text-amber-700"
-                        : "bg-muted text-muted-foreground"
-                    }`}
+          {activeRankingTab === "authors" ? (
+            topAuthors.length > 0 ? (
+              <div className="space-y-3">
+                {topAuthors.map((author, index) => (
+                  <div
+                    key={author.author}
+                    className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
                   >
-                    {index + 1}
-                  </span>
-                  <div className="flex-1">
-                    <p className="font-medium">{author.author}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {author.count} {author.count === 1 ? "livro lido" : "livros lidos"}
-                    </p>
+                    <span
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                        index === 0
+                          ? "bg-yellow-500/20 text-yellow-600"
+                          : index === 1
+                          ? "bg-gray-400/20 text-gray-600"
+                          : index === 2
+                          ? "bg-amber-600/20 text-amber-700"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-medium">{author.author}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {author.count} {author.count === 1 ? "livro lido" : "livros lidos"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={<Users className="w-12 h-12" />}
+                title="Nenhum autor ainda"
+                description="Comece a marcar livros como lidos para ver seu ranking de autores favoritos."
+              />
+            )
           ) : (
-            <EmptyState
-              icon={<Users className="w-12 h-12" />}
-              title="Nenhum autor ainda"
-              description="Comece a marcar livros como lidos para ver seu ranking de autores favoritos."
-            />
+            topGenres.length > 0 ? (
+              <div className="space-y-3">
+                {topGenres.map((genre, index) => (
+                  <div
+                    key={genre.genre}
+                    className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
+                  >
+                    <span
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                        index === 0
+                          ? "bg-yellow-500/20 text-yellow-600"
+                          : index === 1
+                          ? "bg-gray-400/20 text-gray-600"
+                          : index === 2
+                          ? "bg-amber-600/20 text-amber-700"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-medium">{genre.genre}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {genre.count} {genre.count === 1 ? "livro lido" : "livros lidos"}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={<Tag className="w-12 h-12" />}
+                title="Nenhum gênero ainda"
+                description="Comece a marcar livros como lidos para ver seu ranking de gêneros favoritos."
+              />
+            )
           )}
         </CardContent>
       </Card>
