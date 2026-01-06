@@ -187,6 +187,9 @@ export default function DashboardPage() {
   const goal = dashboardData?.goal;
   const topAuthors = dashboardData?.top_authors || [];
   
+  // Verifica se está mostrando todos os anos
+  const isAllYears = selectedYear === 0;
+  
   // Dados do ano selecionado (ou globais se "Todos")
   const booksReadThisYear = isAllYears 
     ? (stats?.books_lido ?? 0) 
@@ -215,9 +218,6 @@ export default function DashboardPage() {
       .sort((a, b) => b - a)
       .map(year => ({ value: year.toString(), label: year.toString() }))
   ];
-  
-  // Verifica se está mostrando todos os anos
-  const isAllYears = selectedYear === 0;
 
   if (isLoading) {
     return <DashboardSkeleton />;
