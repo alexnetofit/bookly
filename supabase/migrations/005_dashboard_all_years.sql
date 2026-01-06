@@ -34,20 +34,20 @@ BEGIN
          WHERE g.user_id = p_user_id AND g.year = target_year)
       ELSE NULL END
     ),
-    -- Top autores (filtrado por ano = só lidos, global = todos os livros)
+    -- Top autores (filtrado por ano = todos os livros do ano, global = todos os livros)
     'top_authors', (
       SELECT COALESCE(json_agg(row_to_json(a.*)), '[]'::json)
       FROM (
         SELECT autor as author, COUNT(*) as count
         FROM public.books
         WHERE user_id = p_user_id 
-          AND (NOT filter_by_year OR (finished_at IS NOT NULL AND EXTRACT(YEAR FROM finished_at) = target_year))
+          AND (NOT filter_by_year OR EXTRACT(YEAR FROM created_at) = target_year)
         GROUP BY autor
         ORDER BY count DESC
         LIMIT 5
       ) a
     ),
-    -- Top gêneros (filtrado por ano = só lidos, global = todos os livros)
+    -- Top gêneros (filtrado por ano = todos os livros do ano, global = todos os livros)
     'top_genres', (
       SELECT COALESCE(json_agg(row_to_json(g.*)), '[]'::json)
       FROM (
@@ -55,25 +55,25 @@ BEGIN
         FROM public.books
         WHERE user_id = p_user_id 
           AND genero IS NOT NULL
-          AND (NOT filter_by_year OR (finished_at IS NOT NULL AND EXTRACT(YEAR FROM finished_at) = target_year))
+          AND (NOT filter_by_year OR EXTRACT(YEAR FROM created_at) = target_year)
         GROUP BY genero
         ORDER BY count DESC
         LIMIT 5
       ) g
     ),
-    -- Contadores únicos (filtrado por ano = só lidos, global = todos os livros)
+    -- Contadores únicos (filtrado por ano = todos os livros do ano, global = todos os livros)
     'unique_authors', (
       SELECT COUNT(DISTINCT autor)::INTEGER 
       FROM public.books 
       WHERE user_id = p_user_id 
-        AND (NOT filter_by_year OR (finished_at IS NOT NULL AND EXTRACT(YEAR FROM finished_at) = target_year))
+        AND (NOT filter_by_year OR EXTRACT(YEAR FROM created_at) = target_year)
     ),
     'unique_genres', (
       SELECT COUNT(DISTINCT genero)::INTEGER 
       FROM public.books 
       WHERE user_id = p_user_id 
         AND genero IS NOT NULL
-        AND (NOT filter_by_year OR (finished_at IS NOT NULL AND EXTRACT(YEAR FROM finished_at) = target_year))
+        AND (NOT filter_by_year OR EXTRACT(YEAR FROM created_at) = target_year)
     ),
     -- Posts (filtrado ou global)
     'posts_year', (
