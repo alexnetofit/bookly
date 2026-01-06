@@ -6,7 +6,7 @@ import { useUser } from "@/hooks/useUser";
 import { useToast } from "@/components/ui/toast";
 import { Modal, Button, Skeleton, EmptyState } from "@/components/ui";
 import type { PostComment, UserProfile } from "@/types/database";
-import { Send, MessageCircle, Trash2 } from "lucide-react";
+import { Send, MessageCircle, Trash2, Pencil, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CommentsModalProps {
@@ -17,6 +17,7 @@ interface CommentsModalProps {
 
 interface CommentWithProfile extends PostComment {
   user_profile?: UserProfile;
+  updated_at?: string | null;
 }
 
 // Format relative time
@@ -48,6 +49,11 @@ export function CommentsModal({ isOpen, onClose, postId }: CommentsModalProps) {
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -121,6 +127,43 @@ export function CommentsModal({ isOpen, onClose, postId }: CommentsModalProps) {
     }
   };
 
+  const startEditing = (comment: CommentWithProfile) => {
+    setEditingId(comment.id);
+    setEditContent(comment.content);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditContent("");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editContent.trim() || !editingId) return;
+
+    setIsSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from("post_comments")
+        .update({
+          content: editContent.trim(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", editingId);
+
+      if (error) throw error;
+
+      showToast("Comentário editado", "success");
+      setEditingId(null);
+      setEditContent("");
+      fetchComments();
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      showToast("Erro ao editar comentário", "error");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Comentários" className="max-w-lg">
       <div className="space-y-0">
@@ -178,17 +221,66 @@ export function CommentsModal({ isOpen, onClose, postId }: CommentsModalProps) {
                         <span className="text-muted-foreground text-sm">
                           {formatRelativeTime(comment.created_at)}
                         </span>
+                        {comment.updated_at && (
+                          <span className="text-muted-foreground text-xs italic">
+                            (editado)
+                          </span>
+                        )}
                         
-                        {user?.id === comment.user_id && (
-                          <button
-                            onClick={() => handleDelete(comment.id)}
-                            className="ml-auto opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                        {user?.id === comment.user_id && editingId !== comment.id && (
+                          <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={() => startEditing(comment)}
+                              className="p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                              title="Editar"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(comment.id)}
+                              className="p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         )}
                       </div>
-                      <p className="text-[15px] mt-0.5">{comment.content}</p>
+                      
+                      {editingId === comment.id ? (
+                        <div className="mt-2 space-y-2">
+                          <textarea
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            className="w-full p-2 text-sm border rounded-lg bg-background resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                            rows={2}
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={handleSaveEdit}
+                              isLoading={isSavingEdit}
+                              disabled={!editContent.trim()}
+                              className="rounded-full"
+                            >
+                              <Check className="w-3 h-3 mr-1" />
+                              Salvar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={cancelEditing}
+                              className="rounded-full"
+                            >
+                              <X className="w-3 h-3 mr-1" />
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[15px] mt-0.5">{comment.content}</p>
+                      )}
                     </div>
                   </div>
                 </div>

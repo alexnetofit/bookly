@@ -690,71 +690,93 @@ export function BookForm({ book, mode }: BookFormProps) {
           )}
         </div>
 
-        {/* Toggle Postar na Comunidade - apenas no modo criar */}
+        {/* Toggle Postar na Comunidade - apenas no modo criar e para usuários premium */}
         {mode === "create" && (
           <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
-            <label className="flex items-center justify-between cursor-pointer">
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="font-medium">Postar na Comunidade</p>
-                  <p className="text-sm text-muted-foreground">
-                    Compartilhe este livro com outros leitores
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={postToCommunity}
-                onClick={() => {
-                  setPostToCommunity(!postToCommunity);
-                  if (postToCommunity) setHasSpoiler(false);
-                }}
-                className={cn(
-                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                  postToCommunity ? "bg-primary" : "bg-muted-foreground/30"
-                )}
-              >
-                <span
-                  className={cn(
-                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                    postToCommunity ? "translate-x-6" : "translate-x-1"
-                  )}
-                />
-              </button>
-            </label>
+            {isPremium ? (
+              <>
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="font-medium">Postar na Comunidade</p>
+                      <p className="text-sm text-muted-foreground">
+                        Compartilhe este livro com outros leitores
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={postToCommunity}
+                    onClick={() => {
+                      setPostToCommunity(!postToCommunity);
+                      if (postToCommunity) setHasSpoiler(false);
+                    }}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                      postToCommunity ? "bg-primary" : "bg-muted-foreground/30"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                        postToCommunity ? "translate-x-6" : "translate-x-1"
+                      )}
+                    />
+                  </button>
+                </label>
 
-            {/* Toggle Spoiler - só aparece se Postar na Comunidade estiver ativo */}
-            {postToCommunity && (
-              <label className="flex items-center justify-between cursor-pointer pt-3 border-t">
+                {/* Toggle Spoiler - só aparece se Postar na Comunidade estiver ativo */}
+                {postToCommunity && (
+                  <label className="flex items-center justify-between cursor-pointer pt-3 border-t">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="w-5 h-5 text-amber-500" />
+                      <div>
+                        <p className="font-medium">Contém spoiler?</p>
+                        <p className="text-sm text-muted-foreground">
+                          O conteúdo ficará ofuscado até o leitor revelar
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={hasSpoiler}
+                      onClick={() => setHasSpoiler(!hasSpoiler)}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                        hasSpoiler ? "bg-amber-500" : "bg-muted-foreground/30"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                          hasSpoiler ? "translate-x-6" : "translate-x-1"
+                        )}
+                      />
+                    </button>
+                  </label>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  <Users className="w-5 h-5 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">Contém spoiler?</p>
+                    <p className="font-medium text-muted-foreground">Postar na Comunidade</p>
                     <p className="text-sm text-muted-foreground">
-                      O conteúdo ficará ofuscado até o leitor revelar
+                      Recurso exclusivo para assinantes
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={hasSpoiler}
-                  onClick={() => setHasSpoiler(!hasSpoiler)}
-                  className={cn(
-                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                    hasSpoiler ? "bg-amber-500" : "bg-muted-foreground/30"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                      hasSpoiler ? "translate-x-6" : "translate-x-1"
-                    )}
-                  />
-                </button>
-              </label>
+                <Link href="/planos">
+                  <Button variant="outline" size="sm">
+                    <Lock className="w-3 h-3 mr-1" />
+                    Upgrade
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         )}

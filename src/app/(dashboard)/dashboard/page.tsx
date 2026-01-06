@@ -84,8 +84,8 @@ export default function DashboardPage() {
     ? dashboardData.available_years 
     : [currentYear];
 
-  // Busca livros por status para o modal
-  const fetchBooksForModal = useCallback(async (status: string | null) => {
+  // Busca livros por status para o modal (com filtro de ano para alguns tipos)
+  const fetchBooksForModal = useCallback(async (status: string | null, filterByYear: boolean = false, yearField: "finished_at" | "updated_at" = "finished_at") => {
     if (!user) return;
     
     setIsLoadingModal(true);
@@ -99,6 +99,15 @@ export default function DashboardPage() {
         query = query.eq("status_leitura", status);
       }
       
+      // Aplicar filtro de ano quando necessário
+      if (filterByYear) {
+        const startOfYear = `${selectedYear}-01-01T00:00:00`;
+        const startOfNextYear = `${selectedYear + 1}-01-01T00:00:00`;
+        query = query
+          .gte(yearField, startOfYear)
+          .lt(yearField, startOfNextYear);
+      }
+      
       const { data } = await query.order("updated_at", { ascending: false });
       setModalBooks(data || []);
     } catch (error) {
@@ -106,51 +115,65 @@ export default function DashboardPage() {
     } finally {
       setIsLoadingModal(false);
     }
-  }, [user]);
+  }, [user, selectedYear]);
 
-  // Busca posts do usuário para o modal
-  const fetchPostsForModal = useCallback(async () => {
+  // Busca posts do usuário para o modal (filtrado por ano)
+  const fetchPostsForModal = useCallback(async (filterByYear: boolean = false) => {
     if (!user) return;
     
     setIsLoadingModal(true);
     try {
-      const { data } = await supabase
+      let query = supabase
         .from("community_posts")
         .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .eq("user_id", user.id);
       
+      if (filterByYear) {
+        const startOfYear = `${selectedYear}-01-01T00:00:00`;
+        const startOfNextYear = `${selectedYear + 1}-01-01T00:00:00`;
+        query = query
+          .gte("created_at", startOfYear)
+          .lt("created_at", startOfNextYear);
+      }
+      
+      const { data } = await query.order("created_at", { ascending: false });
       setModalPosts(data || []);
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {
       setIsLoadingModal(false);
     }
-  }, [user]);
+  }, [user, selectedYear]);
 
   const handleOpenModal = (type: ModalType) => {
     setActiveModal(type);
     
     switch (type) {
       case "lidos":
-        fetchBooksForModal("lido");
+        // Filtrar por ano usando finished_at
+        fetchBooksForModal("lido", true, "finished_at");
         break;
       case "lendo":
-        fetchBooksForModal("lendo");
+        // Global - sem filtro de ano
+        fetchBooksForModal("lendo", false);
         break;
       case "quero_ler":
-        fetchBooksForModal("nao_comecou");
+        // Global - sem filtro de ano
+        fetchBooksForModal("nao_comecou", false);
         break;
       case "abandonados":
-        fetchBooksForModal("desistido");
+        // Filtrar por ano usando updated_at
+        fetchBooksForModal("desistido", true, "updated_at");
         break;
       case "paginas":
       case "autores":
       case "generos":
-        fetchBooksForModal(null);
+        // Filtrar por ano (livros lidos no ano)
+        fetchBooksForModal("lido", true, "finished_at");
         break;
       case "posts":
-        fetchPostsForModal();
+        // Filtrar por ano
+        fetchPostsForModal(true);
         break;
       default:
         break;
@@ -208,7 +231,10 @@ export default function DashboardPage() {
               total_posts: stats.total_posts,
             } : null} 
             goal={goal ?? null} 
-            userName={profile?.full_name?.split(" ")[0] || "Leitor"} 
+            userName={profile?.full_name?.split(" ")[0] || "Leitor"}
+            selectedYear={selectedYear}
+            booksReadThisYear={booksReadThisYear}
+            pagesReadThisYear={pagesReadThisYear}
           />
           <Link href="/estante/novo">
             <Button>

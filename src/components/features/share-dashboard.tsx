@@ -19,16 +19,17 @@ interface ShareDashboardProps {
   } | null;
   goal: AnnualGoal | null;
   userName: string;
+  selectedYear: number;
+  booksReadThisYear: number;
+  pagesReadThisYear: number;
 }
 
-export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
+export function ShareDashboard({ stats, goal, userName, selectedYear, booksReadThisYear, pagesReadThisYear }: ShareDashboardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const storyRef = useRef<HTMLDivElement>(null);
 
-  const currentYear = new Date().getFullYear();
-  const booksReadThisYear = stats?.lido || 0;
   const goalProgress = goal ? Math.min((booksReadThisYear / goal.goal_amount) * 100, 100) : 0;
 
   const generateImage = useCallback(async () => {
@@ -287,7 +288,7 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
                 }}>
                   <span style={{ fontSize: 16 }}>🎯</span>
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 600, color: "#2a2725" }}>Meta {currentYear}</span>
+                <span style={{ fontSize: 16, fontWeight: 600, color: "#2a2725" }}>Meta {selectedYear}</span>
               </div>
               <p style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px 0", color: "#2a2725" }}>
                 {booksReadThisYear} de {goal.goal_amount} livros
@@ -326,10 +327,10 @@ export function ShareDashboard({ stats, goal, userName }: ShareDashboardProps) {
               flex: 1,
             }}
           >
-            <StatBox icon="📖" label="Lidos" value={stats?.lido || 0} color="#5a8a5a" />
+            <StatBox icon="📖" label={`Lidos em ${selectedYear}`} value={booksReadThisYear} color="#5a8a5a" />
             <StatBox icon="📚" label="Lendo" value={stats?.lendo || 0} color="#a08050" />
             <StatBox icon="⏳" label="Quero ler" value={stats?.nao_comecou || 0} color="#8a8580" />
-            <StatBox icon="📄" label="Páginas" value={stats?.total_paginas_lidas.toLocaleString("pt-BR") || "0"} color="#8a6a9a" />
+            <StatBox icon="📄" label={`Páginas em ${selectedYear}`} value={pagesReadThisYear.toLocaleString("pt-BR")} color="#8a6a9a" />
             <StatBox icon="✍️" label="Autores" value={stats?.autores_unicos || 0} color="#b07040" />
             <StatBox icon="🏷️" label="Gêneros" value={stats?.generos_unicos || 0} color="#a06080" />
           </div>
