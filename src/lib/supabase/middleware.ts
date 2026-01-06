@@ -6,6 +6,16 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
+  // Rotas que devem pular completamente o middleware (sem auth check)
+  const skipAuthRoutes = ["/api/cron", "/api/webhook", "/api/stripe/webhook"];
+  const shouldSkipAuth = skipAuthRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  );
+  
+  if (shouldSkipAuth) {
+    return supabaseResponse;
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
