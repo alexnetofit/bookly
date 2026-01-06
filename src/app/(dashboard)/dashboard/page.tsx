@@ -412,35 +412,35 @@ export default function DashboardPage() {
 
       {/* Author/Genre Ranking with Tabs */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center gap-4">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-3 mb-3">
             <TrendingUp className="w-5 h-5 text-primary" />
-            <div className="flex gap-2">
-              <button
-                onClick={() => setActiveRankingTab("authors")}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  activeRankingTab === "authors"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                Top 5 Autores
-              </button>
-              <button
-                onClick={() => setActiveRankingTab("genres")}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  activeRankingTab === "genres"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                Top 5 Gêneros
-              </button>
-            </div>
+            <span className="text-sm text-muted-foreground">
+              {isAllYears ? "Ranking geral" : `Ranking de ${selectedYear}`}
+            </span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isAllYears ? "Mais lidos (todos os anos)" : `Mais lidos em ${selectedYear}`}
-          </p>
+          <div className="flex p-1 bg-muted/50 rounded-lg">
+            <button
+              onClick={() => setActiveRankingTab("authors")}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                activeRankingTab === "authors"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Top 5 Autores lidos
+            </button>
+            <button
+              onClick={() => setActiveRankingTab("genres")}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                activeRankingTab === "genres"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Top 5 Gêneros lidos
+            </button>
+          </div>
         </CardHeader>
         <CardContent>
           {activeRankingTab === "authors" ? (
