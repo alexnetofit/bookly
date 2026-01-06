@@ -85,7 +85,7 @@ export default function DashboardPage() {
     : [currentYear];
 
   // Busca livros por status para o modal (com filtro de ano para alguns tipos)
-  const fetchBooksForModal = useCallback(async (status: string | null, filterByYear: boolean = false, yearField: "finished_at" | "updated_at" = "finished_at") => {
+  const fetchBooksForModal = useCallback(async (status: string | null, filterByYear: boolean = false, yearField: "finished_at" | "updated_at" | "created_at" = "finished_at") => {
     if (!user) return;
     
     setIsLoadingModal(true);
@@ -169,10 +169,14 @@ export default function DashboardPage() {
         fetchBooksForModal("desistido", shouldFilterByYear, "updated_at");
         break;
       case "paginas":
-      case "autores":
-      case "generos":
         // Filtrar por ano (livros lidos no ano)
         fetchBooksForModal("lido", shouldFilterByYear, "finished_at");
+        break;
+      case "autores":
+      case "generos":
+        // Buscar TODOS os livros, não apenas lidos
+        // Se filtrar por ano, usar created_at como referência
+        fetchBooksForModal(null, shouldFilterByYear, "created_at");
         break;
       case "posts":
         // Filtrar por ano
