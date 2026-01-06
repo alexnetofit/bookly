@@ -203,12 +203,9 @@ export default function DashboardPage() {
   const abandonedThisYear = isAllYears 
     ? (stats?.books_desistido ?? 0) 
     : (dashboardData?.abandoned_year ?? 0);
-  const uniqueAuthorsDisplay = isAllYears 
-    ? (stats?.unique_authors ?? 0) 
-    : (dashboardData?.unique_authors ?? 0);
-  const uniqueGenresDisplay = isAllYears 
-    ? (stats?.unique_genres ?? 0) 
-    : (dashboardData?.unique_genres ?? 0);
+  // Autores e gêneros únicos - sempre do dashboardData (vem do RPC)
+  const uniqueAuthorsDisplay = dashboardData?.unique_authors ?? 0;
+  const uniqueGenresDisplay = dashboardData?.unique_genres ?? 0;
   const goalProgress = goal ? (booksReadThisYear / goal.goal_amount) * 100 : 0;
   
   // Gera opções para o dropdown de anos (inclui ano atual e opção "Todos")
