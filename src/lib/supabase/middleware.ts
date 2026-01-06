@@ -63,7 +63,8 @@ export async function updateSession(request: NextRequest) {
     (route) =>
       request.nextUrl.pathname === route ||
       request.nextUrl.pathname.startsWith("/api/webhook") ||
-      request.nextUrl.pathname.startsWith("/api/stripe/webhook")
+      request.nextUrl.pathname.startsWith("/api/stripe/webhook") ||
+      request.nextUrl.pathname.startsWith("/api/cron")
   );
   
   const isBypassSubscriptionRoute = bypassSubscriptionRoutes.some(
